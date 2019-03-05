@@ -1,0 +1,164 @@
+package DeviceManager.DeviceDrivers.TPLinkHS110;
+
+import DeviceManager.DeviceDrivers.DeviceFactory.DeviceConnector;
+import DeviceManager.DeviceDrivers.TPLinkHS110.Implementation.HS110Client;
+import Utility.DeviceInfo;
+import Utility.DeviceStatus;
+import Utility.DeviceType;
+
+import java.io.IOException;
+
+/**
+ * @author Shegufta Ahsan
+ * @project SafeHomePrototype
+ * @date 2/28/2019
+ * @time 8:37 PM
+ */
+
+/**
+ * FOR TP-LINK,the default port is 9999...
+ */
+
+public class TPLinkHS110Connector extends DeviceConnector
+{
+    DeviceInfo devInfo;
+    HS110Client hs110Client;
+    Boolean isDisposed;
+
+    public TPLinkHS110Connector(DeviceInfo _devInfo)
+    {
+        super(_devInfo.getDevType());
+        assert(DeviceType.TPLINK_HS110 == _devInfo.getDevType());
+
+        this.deviceType = DeviceType.TPLINK_HS110;
+
+        this.devInfo = _devInfo;
+        this.hs110Client = new HS110Client(this.devInfo);
+        this.isDisposed = false;
+    }
+
+    @Override
+    public DeviceStatus turnON()
+    {
+        if(this.isDisposed)
+            return DeviceStatus.TIMEOUT;
+
+        try
+        {
+            if(null == this.hs110Client)
+                this.hs110Client = new HS110Client(this.devInfo);
+
+            synchronized (this.hs110Client)
+            {
+                this.hs110Client.on();
+                return DeviceStatus.ON;
+            }
+        }
+        catch (IOException ioEx)
+        {
+            System.out.println("Inside TPLinkHS110Connector::turnON() " + ioEx );
+            return DeviceStatus.TIMEOUT;
+        }
+    }
+
+    @Override
+    public DeviceStatus turnOFF()
+    {
+        if(this.isDisposed)
+            return DeviceStatus.TIMEOUT;
+
+        try
+        {
+            if(null == this.hs110Client)
+                this.hs110Client = new HS110Client(this.devInfo);
+
+            synchronized (this.hs110Client)
+            {
+                this.hs110Client.off();
+                return DeviceStatus.OFF;
+            }
+        }
+        catch (IOException ioEx)
+        {
+            System.out.println("Inside TPLinkHS110Connector::turnOFF() " + ioEx );
+            return DeviceStatus.TIMEOUT;
+        }
+    }
+
+    @Override
+    public DeviceStatus getCurrentStatus()
+    {
+        if(this.isDisposed)
+            return DeviceStatus.TIMEOUT;
+
+        try
+        {
+            if(null == this.hs110Client)
+                this.hs110Client = new HS110Client(this.devInfo);
+
+            synchronized (this.hs110Client)
+            {
+                if (this.hs110Client.isON())
+                {
+                    return DeviceStatus.ON;
+                }
+                else
+                {
+                    return DeviceStatus.OFF;
+                }
+            }
+        }
+        catch (IOException ioEx)
+        {
+            //System.out.println("Inside TPLinkHS110Connector::getCurrentStatus() " + ioEx );
+            return DeviceStatus.TIMEOUT;
+        }
+    }
+
+    @Override
+    public void Dispose()
+    {
+        if(null != this.hs110Client)
+        {
+            synchronized (this.hs110Client)
+            {
+                try
+                {
+                    this.hs110Client.dispose();
+                }
+                catch (IOException ioEx)
+                {
+                    System.out.println("Inside TPLinkHS110Connector::Dispose() " + ioEx );
+                }
+                finally
+                {
+                    this.isDisposed = true;
+                    this.hs110Client = null;
+                }
+            }
+        }
+    }
+
+    @Override
+    public void ResetConnectionBestEffort()
+    {
+        if(null != this.hs110Client)
+        {
+            synchronized (this.hs110Client)
+            {
+                try
+                {
+                    this.hs110Client.dispose();
+                }
+                catch(IOException ioEx)
+                {
+                    System.out.println("Inside TPLinkHS110Connector::ResetConnectionBestEffort() " + ioEx );
+                }
+                finally
+                {
+                    this.hs110Client = null;
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,26 @@
+[
+  {
+    "routineName":"routine1",
+    "commandList":
+    [
+      {"devName":"dummyDev1","targetStatus":"ON","commandPriority":"MUST"},
+      {"devName":"dummyDev1","targetStatus":"ON","commandPriority":"MUST"}
+    ]
+  },
+
+  {"routineName":"routine2",
+    "commandList":
+    [
+      {"devName":"dummyDev1","targetStatus":"ON","commandPriority":"MUST"},
+      {"devName":"dummyDev1","targetStatus":"ON","commandPriority":"MUST"}
+    ]
+  },
+
+  {"routineName":"routine3",
+    "commandList":
+    [
+      {"devName":"dummyDev1","targetStatus":"ON","commandPriority":"MUST"},
+      {"devName":"TPlink1","targetStatus":"ON","commandPriority":"BEST_EFFORT"}
+    ]
+  }
+]
