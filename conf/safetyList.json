@@ -1,0 +1,43 @@
+[
+  {
+    "actionDevName" : "FireAlarm",
+    "actionDevStatus" : "ON",
+    "conditionDevName" : "Oven",
+    "conditionDevStatus" : "ON"
+  },
+
+  {
+    "actionDevName" : "ExhaustFan",
+    "actionDevStatus" : "ON",
+    "conditionDevName" : "Oven",
+    "conditionDevStatus" : "ON"
+  },
+
+  {
+    "actionDevName" : "FireAlarm",
+    "actionDevStatus" : "ON",
+    "conditionDevName" : "CoffeeMkr",
+    "conditionDevStatus" : "ON"
+  },
+
+  {
+    "actionDevName" : "Window",
+    "actionDevStatus" : "OFF",
+    "conditionDevName" : "RainSensor",
+    "conditionDevStatus" : "ON"
+  },
+
+  {
+    "actionDevName" : "WaterSprinkler",
+    "actionDevStatus" : "OFF",
+    "conditionDevName" : "RainSensor",
+    "conditionDevStatus" : "ON"
+  },
+
+  {
+    "actionDevName" : "ExhaustFan",
+    "actionDevStatus" : "ON",
+    "conditionDevName" : "Burner",
+    "conditionDevStatus" : "ON"
+  }
+]

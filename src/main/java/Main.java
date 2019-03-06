@@ -21,7 +21,18 @@ public class Main
         SafeHomeManager safeHomeManager = new SafeHomeManager();
         //assert(false); //SBA: Check if assertion is working on your IDE. If it is turn OFF, see the readme (how to turn it ON for intellij)
 
+        //Routine routine1 = SystemParametersSingleton.getInstance().getRoutine("routine1");
+        //this.sendMsgToRoutineManager(routine1);
 
+        Routine routine3 = SystemParametersSingleton.getInstance().getRoutine("routine3");
+        safeHomeManager.sendMsgToRoutineManager(routine3);
+        ////////////////////////////////////////////////////////////////////////////////////////
+
+
+        System.out.println("Again sleeping");
+        Thread.sleep(30000); // To run it for longer time, put a higher value
+        System.out.println("Exiting SafeHome program....");
+        safeHomeManager.Dispose();
 
 
         /**

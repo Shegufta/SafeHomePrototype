@@ -5,7 +5,7 @@ import DeviceManager.DeviceDrivers.DeviceFactory.DeviceConnectorFactory;
 import EventBusManager.EventBusSingleton;
 import EventBusManager.Events.EventSftyCkrDevMngrMsg;
 import EventBusManager.Events.EventDeviceStatusChange;
-import EventBusManager.Events.EventRegisterRemoveDevices;
+import EventBusManager.Events.EventRegisterRemoveStateChangeDevices;
 import Utility.*;
 import com.google.common.eventbus.Subscribe;
 
@@ -249,15 +249,45 @@ public class DeviceConnectionManagerSingleton
     }
 
     @Subscribe
-    public void EventRegisterRemoveDevices(EventRegisterRemoveDevices _registerDevicesEvent)
+    public void EventRegisterRemoveDevices(EventRegisterRemoveStateChangeDevices _registerDevicesEvent)
     {
-        if(_registerDevicesEvent.isRegisterEvent)
+        if(!isDisposed)
         {
-            this.registerDevices(_registerDevicesEvent.devInfoList);
-        }
-        else
-        {
-            this.removeDevices(_registerDevicesEvent.devInfoList);
+            switch (_registerDevicesEvent.deviceEventType)
+            {
+                case REGISTER:
+                {
+                    this.registerDevices(_registerDevicesEvent.devInfoList);
+                    break;
+                }
+                case REMOVE:
+                {
+                    this.removeDevices(_registerDevicesEvent.devInfoList);
+                    break;
+                }
+                case TURN_ON:
+                {
+                    for (DeviceInfo devInfo : _registerDevicesEvent.devInfoList)
+                    {
+                        String devName = devInfo.getDevName();
+                        DeviceStatus afterExecutionStatus = this.executeCommand(devName, DeviceStatus.ON); // Execute the command
+                        //this is a BestEffort service. can ignore afterExecutionStatus
+                    }
+
+                    break;
+                }
+                case TURN_OFF:
+                {
+                    for (DeviceInfo devInfo : _registerDevicesEvent.devInfoList)
+                    {
+                        String devName = devInfo.getDevName();
+                        DeviceStatus afterExecutionStatus = this.executeCommand(devName, DeviceStatus.OFF); // Execute the command
+                        //this is a BestEffort service. can ignore afterExecutionStatus
+                    }
+
+                    break;
+                }
+            }
         }
     }
     ////////////////////////////////_INCOMING_EVENTS_////////////////////////////////////////////

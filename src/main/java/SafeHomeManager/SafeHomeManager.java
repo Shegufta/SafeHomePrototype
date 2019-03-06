@@ -4,7 +4,7 @@ import ConcurrencyManager.ConcurrencyControllerSingleton;
 import DeviceManager.DeviceConnectionManagerSingleton;
 import EventBusManager.EventBusSingleton;
 import EventBusManager.Events.EventConCtrlSftyCkrMsg;
-import EventBusManager.Events.EventRegisterRemoveDevices;
+import EventBusManager.Events.EventRegisterRemoveStateChangeDevices;
 import EventBusManager.Events.EventSfHmRtnMgrMsg;
 import RoutineManager.RoutineManagerSingleton;
 import SafetyCheckManager.SafetyCheckerSingleton;
@@ -50,20 +50,11 @@ public class SafeHomeManager
         System.out.println("\t\t DONE...");
         ////////////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////////////
-        this.RegisterDevices(SystemParametersSingleton.getInstance().getDeviceList());
+        this.RegisterDevices(SystemParametersSingleton.getInstance().getDeviceInfoList());
         int sleepIntervalMS = 6000;
         System.out.println("Device Registration request sent.... Wait for a while to execute it... Wait time in millisecond = " + sleepIntervalMS);
         Thread.sleep(sleepIntervalMS);
         System.out.println("wake up from sleep");
-
-
-        //Routine routine1 = SystemParametersSingleton.getInstance().getRoutine("routine1");
-        //this.sendMsgToRoutineManager(routine1);
-
-        Routine routine3 = SystemParametersSingleton.getInstance().getRoutine("routine3");
-        this.sendMsgToRoutineManager(routine3);
-        ////////////////////////////////////////////////////////////////////////////////////////
-
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////
@@ -78,7 +69,7 @@ public class SafeHomeManager
         System.out.println("================================");
     }
 
-    private void sendMsgToRoutineManager(Routine _routine)
+    public void sendMsgToRoutineManager(Routine _routine)
     {
         EventBusSingleton.getInstance().getEventBus().post(new EventSfHmRtnMgrMsg(true, _routine));
     }
@@ -99,27 +90,45 @@ public class SafeHomeManager
     /////////////////////////////////////////////////////////////////////////////////////////////
 
     /////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////_ADD/REMOVE_DEVICES//////////////////////////////////////////
+    ////////////////////////////////_ADD/REMOVE/CHANGESTATUS_DEVICES/////////////////////////////
 
     public void RegisterDevices(List<DeviceInfo> _devInfoList)
     {
-        EventRegisterRemoveDevices registerDevicesEvent = new EventRegisterRemoveDevices(_devInfoList, true);
+        EventRegisterRemoveStateChangeDevices registerDevicesEvent = new EventRegisterRemoveStateChangeDevices(_devInfoList, EventRegisterRemoveStateChangeDevices.DeviceEventType.REGISTER);
         EventBusSingleton.getInstance().getEventBus().post(registerDevicesEvent); // post event
     }
 
     public void RemoveDevices(List<DeviceInfo> _devInfoList)
     {
-        EventRegisterRemoveDevices removeDevicesEvent = new EventRegisterRemoveDevices(_devInfoList, false);
+        EventRegisterRemoveStateChangeDevices removeDevicesEvent = new EventRegisterRemoveStateChangeDevices(_devInfoList, EventRegisterRemoveStateChangeDevices.DeviceEventType.REMOVE);
         EventBusSingleton.getInstance().getEventBus().post(removeDevicesEvent); // post event
     }
 
-    ////////////////////////////////_ADD/REMOVE_DEVICES//////////////////////////////////////////
+    public void turnOnOffdevice(String _deviceName, boolean _isOn)
+    {
+        DeviceInfo deviceInfo = SystemParametersSingleton.getInstance().getDeviceInfo(_deviceName);
+
+        if(null == deviceInfo)
+        {
+            System.out.println("Device : " + _deviceName + " NOT FOUND...");
+        }
+        else
+        {
+            EventRegisterRemoveStateChangeDevices.DeviceEventType deviceEventType = (_isOn)?
+                    EventRegisterRemoveStateChangeDevices.DeviceEventType.TURN_ON : EventRegisterRemoveStateChangeDevices.DeviceEventType.TURN_OFF;
+
+            EventRegisterRemoveStateChangeDevices onOffDevicesEvent = new EventRegisterRemoveStateChangeDevices(deviceInfo, deviceEventType);
+            EventBusSingleton.getInstance().getEventBus().post(onOffDevicesEvent); // post event
+        }
+    }
+    ////////////////////////////////_ADD/REMOVE/CHANGESTATUS_DEVICES/////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////////////
 
     public void Dispose()
     {
         Runtime.getRuntime().removeShutdownHook(this.shutdownHook);
         System.out.println("Disposing SafeHomeManager");
+        routineManagerSingleton.Dispose();
         concurrencyControllerSingleton.Dispose();
         safetyCheckerSingleton.Dispose();
         deviceConnectionManagerSingleton.Dispose();
