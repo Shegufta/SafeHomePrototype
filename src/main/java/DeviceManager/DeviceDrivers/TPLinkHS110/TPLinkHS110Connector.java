@@ -116,6 +116,17 @@ public class TPLinkHS110Connector extends DeviceConnector
     }
 
     @Override
+    public DeviceStatus simulateTIMEOUTonlyIn_DUMMY_DEVICE()
+    {
+        System.out.println("This function should only be called for DUMMY_DEVICE");
+        System.out.println("Should not be called from : " + this.deviceType.name());
+        System.out.println("FATAL ERROR... TERMINATING PROGRAM....");
+        System.exit(1);
+
+        return null;
+    }
+
+    @Override
     public void Dispose()
     {
         if(null != this.hs110Client)

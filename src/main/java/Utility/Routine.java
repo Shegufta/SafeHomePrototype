@@ -109,6 +109,15 @@ public class Routine
     }
 
     @JsonIgnore
+    public void refreshRoutine()
+    {
+        for(Command command : this.commandList)
+        {
+            command.refreshCommand();
+        }
+    }
+
+    @JsonIgnore
     public synchronized void Dispose()
     {
         //TODO: implement it

@@ -1,26 +1,41 @@
 [
   {
-    "routineName":"routine1",
+    "routineName":"turn_on_oven",
     "commandList":
     [
-      {"devName":"dummyDev1","targetStatus":"ON","commandPriority":"MUST"},
-      {"devName":"dummyDev1","targetStatus":"ON","commandPriority":"MUST"}
+      {"devName":"oven","targetStatus":"ON","commandPriority":"MUST"}
     ]
   },
 
-  {"routineName":"routine2",
+  {
+    "routineName":"turn_on_coffee_maker",
     "commandList":
     [
-      {"devName":"dummyDev1","targetStatus":"ON","commandPriority":"MUST"},
-      {"devName":"dummyDev1","targetStatus":"ON","commandPriority":"MUST"}
+      {"devName":"coffee_maker","targetStatus":"ON","commandPriority":"MUST"}
     ]
   },
 
-  {"routineName":"routine3",
+  {"routineName":"open_window",
     "commandList":
     [
-      {"devName":"dummyDev1","targetStatus":"ON","commandPriority":"MUST"},
-      {"devName":"TPlink1","targetStatus":"ON","commandPriority":"BEST_EFFORT"}
+      {"devName":"window","targetStatus":"ON","commandPriority":"MUST"}
+    ]
+  },
+
+  {"routineName":"theater_mode",
+    "commandList":
+    [
+      {"devName":"tv","targetStatus":"ON","commandPriority":"MUST"},
+      {"devName":"speaker","targetStatus":"ON","commandPriority":"MUST"},
+      {"devName":"light","targetStatus":"OFF","commandPriority":"BEST_EFFORT"}
+    ]
+  },
+
+  {"routineName":"smart_plug_test",
+    "commandList":
+    [
+      {"devName":"exhaust_fan","targetStatus":"ON","commandPriority":"MUST"},
+      {"devName":"smart_plug","targetStatus":"ON","commandPriority":"MUST"}
     ]
   }
 ]

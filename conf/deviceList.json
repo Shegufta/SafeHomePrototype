@@ -1,5 +1,14 @@
 [
-  {"devName":"dummyDev1","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
-  {"devName":"dummyDev2","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
-  {"devName":"TPlink1","devType":"TPLINK_HS110","ipAddr":"192.168.0.44","port":1234,"isPersistentTCP":true}
+  {"devName":"speaker","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
+  {"devName":"tv","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
+  {"devName":"light","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
+  {"devName":"exhaust_fan","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
+  {"devName":"oven","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
+  {"devName":"fire_alarm","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
+  {"devName":"rain_sensor","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
+  {"devName":"window","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
+  {"devName":"water_sprinkler","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
+  {"devName":"coffee_maker","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
+  {"devName":"burner","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
+  {"devName":"smart_plug","devType":"TPLINK_HS110","ipAddr":"192.168.0.44","port":1234,"isPersistentTCP":true}
 ]

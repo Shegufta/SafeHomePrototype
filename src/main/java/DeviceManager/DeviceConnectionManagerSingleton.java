@@ -109,21 +109,41 @@ public class DeviceConnectionManagerSingleton
 
 
 
-    private synchronized DeviceStatus executeCommand(String _devName, DeviceStatus _targetStatus)
+    private synchronized DeviceStatus executeCommand(DeviceInfo devInfo, DeviceStatus _targetStatus, Boolean _isManualOverride)
     {
-        assert((DeviceStatus.OFF == _targetStatus) || (DeviceStatus.ON == _targetStatus));
+        assert((DeviceStatus.OFF == _targetStatus) ||
+                (DeviceStatus.ON == _targetStatus) ||
+                ( (DeviceStatus.TIMEOUT == _targetStatus) && (devInfo.getDevType() == DeviceType.DUMMY_DEVICE) )
+        );
+
+        if((DeviceStatus.TIMEOUT == _targetStatus) && (devInfo.getDevType() != DeviceType.DUMMY_DEVICE))
+        {
+            System.out.println("\ninside DeviceConnectionManagerSingleton::executeCommand(...)");
+            System.out.println("Fatal Error: Can set TIMEOUT only in DUMMY DEVICE...... Current device type is : " + devInfo.getDevType().name());
+            System.exit(1);
+        }
+
+        String devName = devInfo.getDevName();
 
         DeviceStatus currentStatus = DeviceStatus.COMMAND_NOT_EXECUTED_YET;
         switch (_targetStatus)
         {
             case ON:
             {
-                currentStatus = this.sendCommandToDevice(_devName, DeviceCommandType.TURN_ON);
+                currentStatus = this.sendCommandToDevice(devName, DeviceCommandType.TURN_ON);
                 break;
             }
             case OFF:
             {
-                currentStatus = this.sendCommandToDevice(_devName, DeviceCommandType.TURN_OFF);
+                currentStatus = this.sendCommandToDevice(devName, DeviceCommandType.TURN_OFF);
+                break;
+            }
+            case TIMEOUT:
+            {
+                // NOTE: this option is only for DUMMY_DEVICE
+                assert(devInfo.getDevType() == DeviceType.DUMMY_DEVICE);
+
+                currentStatus = this.sendCommandToDevice(devName, DeviceCommandType.TIMEOUT);
                 break;
             }
             default:
@@ -136,8 +156,17 @@ public class DeviceConnectionManagerSingleton
 
         if(currentStatus == _targetStatus)
         {
+            //If it is a DUMMY_DEVICE and _targetStatus = TIMEOUT, then do not update devNameDevTrackerMap
+            //If devNameDevTrackerMapis updated to TIMEOUT, then the "device state change" detector
+            // wont be able to detect the simulated change (ON, OFF, UNPLUG) of the DUMMY_DEVICE
+
             //if successful, update devNameDevTrackerMap. Otherwise the periodicStatusAndFailureChecker will consider it as external change.
-            devNameDevTrackerMap.get(_devName).UpdateCurrentStatus(currentStatus);
+            if (!_isManualOverride) // TIMEOUT can be set as targetStatus only for DUMMY_DEVICE
+            {
+                // if it is not a ManualOverride (i.e. sending command from SafeHomeManager, then update the local status-table
+                // However, in the case of a ManualOverride, let the Periodic Status Tracker track down the manually changed status
+                devNameDevTrackerMap.get(devName).UpdateCurrentStatus(currentStatus);
+            }
         }
         else
         {
@@ -164,12 +193,12 @@ public class DeviceConnectionManagerSingleton
         {//If a MUST command fails, stop execution. For BestEffort -> don't care
 
             DeviceStatus targetStatus = routine.commandList.get(index).targetStatus;
-            String devName = routine.commandList.get(index).deviceInfo.getDevName();
+            DeviceInfo devInfo = routine.commandList.get(index).deviceInfo;
 
-            DeviceStatus afterExecutionStatus = this.executeCommand(devName, targetStatus); // Execute the command
+            DeviceStatus afterExecutionStatus = this.executeCommand(devInfo, targetStatus, false); // Execute the command
             routine.commandList.get(index).afterExecutionStatus = afterExecutionStatus; //Update the execution result
 
-            System.out.println("\t\t devName = " + devName + " | TargetStatus = " + targetStatus.name() + " afterEx =  " + afterExecutionStatus.name() );
+            System.out.println("\t\t devName = " + devInfo.getDevName() + " | TargetStatus = " + targetStatus.name() + " afterEx =  " + afterExecutionStatus.name() );
 
             if( afterExecutionStatus != targetStatus)
             {// If cannot set the device's status
@@ -194,8 +223,8 @@ public class DeviceConnectionManagerSingleton
                     for(; 0 <= rollBackIndex; --rollBackIndex)
                     {
                         DeviceStatus rollBackStatus = rollBackFormula.commandList.get(rollBackIndex).targetStatus;
-                        String rollBackDevName = rollBackFormula.commandList.get(rollBackIndex).deviceInfo.getDevName();
-                        afterExecutionStatus = this.executeCommand(rollBackDevName, rollBackStatus); //Try to rollback to its previous stage
+                        DeviceInfo rollBackDevInfo = rollBackFormula.commandList.get(rollBackIndex).deviceInfo;
+                        afterExecutionStatus = this.executeCommand(rollBackDevInfo, rollBackStatus, false); //Try to rollback to its previous stage
                         rollBackFormula.commandList.get(rollBackIndex).afterExecutionStatus = afterExecutionStatus; //Update the current "after execution status"
                     }
 
@@ -266,22 +295,24 @@ public class DeviceConnectionManagerSingleton
                     break;
                 }
                 case TURN_ON:
-                {
-                    for (DeviceInfo devInfo : _registerDevicesEvent.devInfoList)
-                    {
-                        String devName = devInfo.getDevName();
-                        DeviceStatus afterExecutionStatus = this.executeCommand(devName, DeviceStatus.ON); // Execute the command
-                        //this is a BestEffort service. can ignore afterExecutionStatus
-                    }
-
-                    break;
-                }
                 case TURN_OFF:
+                case UNPLUG:
                 {
+                    DeviceStatus deviceStatus = DeviceStatus.ON;
+                    if(_registerDevicesEvent.deviceEventType == EventRegisterRemoveStateChangeDevices.DeviceEventType.TURN_ON)
+                    {
+                        deviceStatus = DeviceStatus.ON;
+                    }
+                    else if(_registerDevicesEvent.deviceEventType == EventRegisterRemoveStateChangeDevices.DeviceEventType.TURN_OFF)
+                    {
+                        deviceStatus = DeviceStatus.OFF;
+                    }
+                    else
+                        deviceStatus = DeviceStatus.TIMEOUT; // This is only for DUMMY_DEVICE. UNPLUG is equivalent to TIMEOUT
+
                     for (DeviceInfo devInfo : _registerDevicesEvent.devInfoList)
                     {
-                        String devName = devInfo.getDevName();
-                        DeviceStatus afterExecutionStatus = this.executeCommand(devName, DeviceStatus.OFF); // Execute the command
+                        DeviceStatus afterExecutionStatus = this.executeCommand(devInfo, deviceStatus, true); // Execute the command
                         //this is a BestEffort service. can ignore afterExecutionStatus
                     }
 
@@ -404,6 +435,11 @@ public class DeviceConnectionManagerSingleton
             case TURN_OFF:
             {
                 devStatus = devConnector.turnOFF();
+                break;
+            }
+            case TIMEOUT:
+            {// only for DUMMY_DEVICES... you can set the status TIMEOUT. NOT APPLICABLE FOR OTHER DEVICES
+                devStatus = devConnector.simulateTIMEOUTonlyIn_DUMMY_DEVICE();
                 break;
             }
             case GET_STATUS:

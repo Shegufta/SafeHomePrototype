@@ -61,6 +61,13 @@ public class Command
         this.isDisposed = false;
     }
 
+    @JsonIgnore
+    public void refreshCommand()
+    {
+        this.beforeExecutionStatus = DeviceStatus.COMMAND_NOT_EXECUTED_YET;
+        this.afterExecutionStatus = DeviceStatus.COMMAND_NOT_EXECUTED_YET;
+    }
+
 
     @Override
     public String toString()

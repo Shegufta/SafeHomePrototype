@@ -206,7 +206,12 @@ public class SystemParametersSingleton
      */
     public Routine getRoutine(String routineName)
     {
-        return this.routineNameRoutineDetailsMap.getOrDefault(routineName, null);
+        Routine routine = this.routineNameRoutineDetailsMap.getOrDefault(routineName, null);
+
+        if(routine != null)
+            routine.refreshRoutine();
+
+        return routine;
     }
 
     /**
@@ -217,6 +222,17 @@ public class SystemParametersSingleton
     {
         List<Routine> routineList = new ArrayList<>(this.routineNameRoutineDetailsMap.values());
         return routineList;
+    }
+
+    public List<String> getRoutineNameList()
+    {
+        List<String> routineNameList = new ArrayList<>(this.routineNameRoutineDetailsMap.keySet());
+        return routineNameList;
+    }
+
+    public Boolean isRoutinePresent(String routineName)
+    {
+        return this.getRoutineNameList().contains(routineName);
     }
 
     /**

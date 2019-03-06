@@ -10,5 +10,6 @@ public enum DeviceCommandType
 {
     TURN_ON,
     TURN_OFF,
+    TIMEOUT,
     GET_STATUS
 }

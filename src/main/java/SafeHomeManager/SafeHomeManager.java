@@ -71,6 +71,7 @@ public class SafeHomeManager
 
     public void sendMsgToRoutineManager(Routine _routine)
     {
+        assert(null != _routine);
         EventBusSingleton.getInstance().getEventBus().post(new EventSfHmRtnMgrMsg(true, _routine));
     }
     ////////////////////////////////_SEND/RECEIVE_MSG_///////////////////////////////////////////
@@ -104,7 +105,7 @@ public class SafeHomeManager
         EventBusSingleton.getInstance().getEventBus().post(removeDevicesEvent); // post event
     }
 
-    public void turnOnOffdevice(String _deviceName, boolean _isOn)
+    public void turnOnOffUnplugDevice(String _deviceName, EventRegisterRemoveStateChangeDevices.DeviceEventType _onOffUnplugDevice)
     {
         DeviceInfo deviceInfo = SystemParametersSingleton.getInstance().getDeviceInfo(_deviceName);
 
@@ -114,10 +115,7 @@ public class SafeHomeManager
         }
         else
         {
-            EventRegisterRemoveStateChangeDevices.DeviceEventType deviceEventType = (_isOn)?
-                    EventRegisterRemoveStateChangeDevices.DeviceEventType.TURN_ON : EventRegisterRemoveStateChangeDevices.DeviceEventType.TURN_OFF;
-
-            EventRegisterRemoveStateChangeDevices onOffDevicesEvent = new EventRegisterRemoveStateChangeDevices(deviceInfo, deviceEventType);
+            EventRegisterRemoveStateChangeDevices onOffDevicesEvent = new EventRegisterRemoveStateChangeDevices(deviceInfo, _onOffUnplugDevice);
             EventBusSingleton.getInstance().getEventBus().post(onOffDevicesEvent); // post event
         }
     }

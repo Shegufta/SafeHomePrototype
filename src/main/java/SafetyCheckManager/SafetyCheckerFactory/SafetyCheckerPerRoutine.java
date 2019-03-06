@@ -28,6 +28,8 @@ public class SafetyCheckerPerRoutine extends SafetyChecker
         //TO RUI: Dummy code, this code handles the device event changes ON/OFF/TIMEOUT/REMOVED
         //Implement your logic
 
+        System.out.println("\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+        System.out.println("@ DEVICE STATUS CHANGED....");
         for(Map.Entry<String, DeviceStatus> entry : _devNameStatusMap.entrySet())
         {
             String devName = entry.getKey();
@@ -36,15 +38,16 @@ public class SafetyCheckerPerRoutine extends SafetyChecker
             if(currentStatus == DeviceStatus.REMOVED)
             {
                 this.devNameStatusMap.remove(devName);
-                System.out.println("\t < @@@@@@@@@@@@@@@@@@@@@@ device " + devName + " : removed >");
+                System.out.println("\t < deviceName " + devName + " : removed >");
             }
             else
             {
                 DeviceStatus previousStatus = this.devNameStatusMap.getOrDefault(devName, DeviceStatus.UNKNOWN);
                 this.devNameStatusMap.put(devName, currentStatus);
-                System.out.println("\t< @@@@@@@@@@@@@@@@@@@@@@ "+ devName + " : previousStatus = " + previousStatus + " _currentStatus " + currentStatus + " >");
+                System.out.println("\t< deviceName: "+ devName + " | previousStatus = " + previousStatus + " | currentStatus " + currentStatus + " >");
             }
         }
+        System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
     }
 
     @Override
@@ -62,7 +65,7 @@ public class SafetyCheckerPerRoutine extends SafetyChecker
             for(int index = 0 ; index < _routineToCheck.commandList.size() ; ++index)
             {
                 assert(_routineToCheck.commandList.get(index).beforeExecutionStatus == DeviceStatus.COMMAND_NOT_EXECUTED_YET);
-
+                
                 String devName = _routineToCheck.commandList.get(index).deviceInfo.getDevName();
                 assert(this.devNameStatusMap.containsKey(devName)); //Must register the device before execution of a routine. If you remove a device, remove all routines that touch that device
                 DeviceStatus beforeExecutionStatus = this.devNameStatusMap.get(devName);

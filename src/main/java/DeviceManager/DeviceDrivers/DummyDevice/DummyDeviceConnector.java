@@ -56,6 +56,18 @@ public class DummyDeviceConnector extends DeviceConnector
     }
 
     @Override
+    public DeviceStatus simulateTIMEOUTonlyIn_DUMMY_DEVICE()
+    {
+        assert(this.deviceType == DeviceType.DUMMY_DEVICE);
+
+        synchronized (devInfo)
+        {
+            this.devStatus = DeviceStatus.TIMEOUT;
+            return this.devStatus;
+        }
+    }
+
+    @Override
     public  void Dispose()
     {
         //It is dummy... Nothing to do!

@@ -19,7 +19,8 @@ public class EventRegisterRemoveStateChangeDevices
         REGISTER,
         REMOVE,
         TURN_ON,
-        TURN_OFF
+        TURN_OFF,
+        UNPLUG
     }
 
     public List<DeviceInfo> devInfoList;
