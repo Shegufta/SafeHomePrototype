@@ -67,7 +67,7 @@ public class SystemParametersSingleton
 
     private Boolean validateConditionVsRequiredActionsMap(HashMap<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> conditionVsRequiredActionsMap)
     {
-        //TODO: validate if all device names are present in the Device List
+        //TODO (rui): validate if all device names are present in the Device List
         //TODO: validate if there are conflicting action rules etc.
 
         return true;
@@ -256,6 +256,16 @@ public class SystemParametersSingleton
      */
     public Map<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> getSafetyRules()
     {
+        return this.conditionVsRequiredActionsMap;
+    }
+
+    /**
+     *
+     * @return Map of safety rules related to a set of devices
+     */
+    public Map<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> getSafetyRules(List<DevNameDevStatusTuple> devset)
+    {
+        // TODO (rui): This func is for optimization.
         return this.conditionVsRequiredActionsMap;
     }
 

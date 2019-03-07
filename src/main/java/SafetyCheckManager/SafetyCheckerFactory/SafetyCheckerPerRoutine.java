@@ -1,10 +1,11 @@
 package SafetyCheckManager.SafetyCheckerFactory;
 
 import EventBusManager.Events.EventSftyCkrDevMngrMsg;
-import Utility.DeviceStatus;
-import Utility.Routine;
-import Utility.SafetyCheckerType;
+import Utility.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,13 +25,9 @@ public class SafetyCheckerPerRoutine extends SafetyChecker
     @Override
     public synchronized void eventHandler_DeviceStatusChange(Map<String, DeviceStatus> _devNameStatusMap)
     {
-        //MSG from lower layer
-        //TO RUI: Dummy code, this code handles the device event changes ON/OFF/TIMEOUT/REMOVED
-        //Implement your logic
-
         System.out.println("\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
         System.out.println("@ DEVICE STATUS CHANGED....");
-        for(Map.Entry<String, DeviceStatus> entry : _devNameStatusMap.entrySet())
+        for(final Map.Entry<String, DeviceStatus> entry : _devNameStatusMap.entrySet())
         {
             String devName = entry.getKey();
             DeviceStatus currentStatus = entry.getValue();
@@ -47,6 +44,19 @@ public class SafetyCheckerPerRoutine extends SafetyChecker
                 System.out.println("\t< deviceName: "+ devName + " | previousStatus = " + previousStatus + " | currentStatus " + currentStatus + " >");
             }
         }
+
+        // Check whether new change violates safety rules
+        // (Needs to be done here, because there might be multiple changes in this function here with no order showing)
+        Map<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> safety_rules =
+                SystemParametersSingleton.getInstance().getSafetyRules();
+        for (final Map.Entry<String, DeviceStatus> new_dev_stat: _devNameStatusMap.entrySet()) {
+            if (!checkOneDevState(new DevNameDevStatusTuple(new_dev_stat.getKey(),
+                    new_dev_stat.getValue()), safety_rules, this.devNameStatusMap)) {
+                //TODO: what do we want to do for now?
+                System.out.println("Check Failed!!!!!!!!\n");
+            }
+        }
+
         System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
     }
 
@@ -58,6 +68,26 @@ public class SafetyCheckerPerRoutine extends SafetyChecker
         // this one is just a dummy function!
 
         Boolean isSafe = true;
+
+        Map<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> safety_rules =
+                SystemParametersSingleton.getInstance().getSafetyRules();
+        List<DevNameDevStatusTuple> target_dev_stats = getDevStatesFromRoutine(_routineToCheck);
+        Map<String, DeviceStatus> all_dev_stats = new HashMap<>(this.devNameStatusMap);
+        // TODO: null pointer handling for all_dev_state.
+
+        for (final DevNameDevStatusTuple target_dev_stat: target_dev_stats) {
+            // TODO: for optimization: limit range of safety rules.
+            // For each command, scan all the safety rules
+            if (!checkOneDevState(target_dev_stat, safety_rules, all_dev_stats)) {
+                System.out.println("DYNAMIC SAFE CHECKER -- Not safe for DEVICE " + target_dev_stat.getDevName() +
+                        " to STATUS " + target_dev_stat.getDevStatus().toString());
+                isSafe = false;
+            }
+
+            // The next command check is based on successful execution of past commands.
+            all_dev_stats.put(target_dev_stat.getDevName(), target_dev_stat.getDevStatus());
+        }
+
 
         if(isSafe)
         {
@@ -95,6 +125,31 @@ public class SafetyCheckerPerRoutine extends SafetyChecker
             _routineToCheck.executionResult = Routine.RoutineExecutionStatus.SAFETY_CHECK_FAILED;
             this.sendMsgToConcurrencyController(_routineToCheck);
         }
+    }
+
+    private boolean checkOneDevState(final DevNameDevStatusTuple target_dev_stat,
+                                     final Map<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> safety_rules,
+                                     final Map<String, DeviceStatus> all_dev_stats) {
+        Boolean isSafe = true;
+        for (final DevNameDevStatusTuple condition: safety_rules.keySet()){
+            if (!target_dev_stat.equals(condition)) { continue; }
+            // Get the expected device states for under that safety rule.
+            for (final DevNameDevStatusTuple expected_devstate: safety_rules.get(condition)) {
+                // Compare each expected device state with running state (per-routine level)
+                if (!all_dev_stats.get(expected_devstate.getDevName()).equals(expected_devstate.getDevStatus())) {
+                    isSafe = false;
+                }
+            }
+        }
+        return isSafe;
+    }
+
+    private List<DevNameDevStatusTuple> getDevStatesFromRoutine(Routine routine) {
+        final List<DevNameDevStatusTuple> devstats = new ArrayList<>();
+        for (final Command cmd: routine.commandList) {
+            devstats.add(new DevNameDevStatusTuple(cmd.devName, cmd.targetStatus));
+        }
+        return devstats;
     }
 
 

@@ -15,7 +15,7 @@ public class DevNameDevStatusTuple
     private String devName;
 
     @JsonProperty
-    public DeviceStatus devStatus;
+    private DeviceStatus devStatus;
 
     public DevNameDevStatusTuple(){} // Default Constructor for JSON
 
@@ -68,6 +68,14 @@ public class DevNameDevStatusTuple
         );
 
         return isEqual;
+    }
+
+    public String getDevName() {
+        return this.devName;
+    }
+
+    public DeviceStatus getDevStatus() {
+        return this.devStatus;
     }
 }
 
