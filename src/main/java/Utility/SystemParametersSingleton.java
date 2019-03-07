@@ -69,6 +69,7 @@ public class SystemParametersSingleton
     {
         //TODO: validate if all device names are present in the Device List
         //TODO: validate if there are conflicting action rules etc.
+        // Assign to Rui
 
         return true;
     }
@@ -258,6 +259,17 @@ public class SystemParametersSingleton
     {
         return this.conditionVsRequiredActionsMap;
     }
+
+    /**
+     *
+     * @return Map of safety rules related to a set of devices
+     */
+    public Map<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> getSafetyRules(List<DevNameDevStatusTuple> devset)
+    {
+        // TODO: This func is for optimization.
+        return this.conditionVsRequiredActionsMap;
+    }
+
 
 
     public static synchronized SystemParametersSingleton getInstance()

@@ -36,7 +36,7 @@ public class SafetyCheckerSingleton
 
         return SafetyCheckerSingleton.singleton;
     }
-f
+
     public void Dispose()
     {
         this.isDisposed = true;

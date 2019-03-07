@@ -9,6 +9,7 @@ import EventBusManager.Events.EventRegisterRemoveStateChangeDevices;
 import Utility.*;
 import com.google.common.eventbus.Subscribe;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +26,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class DeviceConnectionManagerSingleton
 {
-    private class DeviceTracker
+    public class DeviceTracker
     {
         public DeviceConnector deviceConnector;
         public Long lastStatusUpdateMS;
@@ -105,6 +106,15 @@ public class DeviceConnectionManagerSingleton
         DeviceTracker devTracker = this.devNameDevTrackerMap.get(_devName);
 
         return devTracker.deviceConnector;
+    }
+
+    public synchronized HashMap<String, DeviceStatus> getRunningDevStates(){
+        // TODO: not sure whether this needs to be synchronized
+        HashMap<String, DeviceStatus> dev_states = new HashMap<>(this.devNameDevTrackerMap.size());
+        for (final HashMap.Entry<String, DeviceTracker> name_tracker: this.devNameDevTrackerMap.entrySet()) {
+            dev_states.put(name_tracker.getKey(), name_tracker.getValue().currentStatus);
+        }
+        return dev_states;
     }
 
 
