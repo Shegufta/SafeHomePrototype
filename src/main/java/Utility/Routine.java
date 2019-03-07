@@ -123,14 +123,19 @@ public class Routine
         //TODO: implement it
         this.isDisposed = true;
 
-        for(Command command : this.commandList)
+        if(commandList != null)
         {
-            command.Dispose();
+            for(Command command : this.commandList)
+            {
+                if(command != null)
+                {
+                    command.Dispose();
+                }
+            }
+
+            this.commandList.clear();
+            this.commandList = null;
         }
-
-        this.commandList.clear();
-        this.commandList = null;
-
     }
 
     @Override
