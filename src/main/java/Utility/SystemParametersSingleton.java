@@ -36,19 +36,14 @@ public class SystemParametersSingleton
 
     private String getOSindependentPath(String filePath)
     {
-        String osIndependentPath = filePath;
-
-        if(osIndependentPath.contains("/"))
+        if(filePath.contains("/"))
         {
-            osIndependentPath.replace('/', File.separatorChar);
+            return filePath.replace('/', File.separatorChar);
         }
         else
         {
-            osIndependentPath.replace('\\', File.separatorChar);
+            return filePath.replace('\\', File.separatorChar);
         }
-
-
-        return osIndependentPath;
     }
 
     private Boolean validateDevNameDevInfoMap(Map<String, DeviceInfo> _devNameDevInfoMap)
@@ -80,7 +75,9 @@ public class SystemParametersSingleton
 
         try
         {
-            properties.load(new FileInputStream(PROPERTY_FILE_NAME));
+            String propertyFileName = this.getOSindependentPath(PROPERTY_FILE_NAME);
+            System.out.println("> " + propertyFileName);
+            properties.load(new FileInputStream(propertyFileName));
 
             //////////////////////////////////////////////////////////////////////////////////////////////////////
             //////////////////////////////////////_LOAD_SINGLE_PARAMETERS_////////////////////////////////////////
