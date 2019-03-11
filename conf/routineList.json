@@ -11,7 +11,8 @@
     "routineName":"turn_on_coffee_maker",
     "commandList":
     [
-      {"devName":"coffee_maker","targetStatus":"ON","commandPriority":"MUST"}
+      {"devName":"coffee_maker","targetStatus":"ON","commandPriority":"MUST"},
+      {"devName":"fire_alarm","targetStatus":"ON","commandPriority":"MUST"}
     ]
   },
 

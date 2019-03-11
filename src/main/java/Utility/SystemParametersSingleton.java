@@ -223,24 +223,38 @@ public class SystemParametersSingleton
      */
     private Routine staticSafetyCheckPerRoutine(Routine rt,
                                                 HashMap<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> safety_rules) {
-        List<Command> cmd_list = rt.commandList;
-        LinkedHashSet<Command> res_linked_set = new LinkedHashSet<>();
-        // LinkedHashSet Remove duplicated commands (e.g. wrong sequence before, after adding pre-requests, the actions occur twice.)
+
         // TODO: Needs modification for intentionally duplicated or repetitive cmd in long-running routines
+
+        // LinkedHashSet does not work well for Command. Thu,s here use List and existing_targets together to track.
+        Boolean isSafe = true;
+        List<Command> cmd_list = rt.commandList;
+        List<Command> res_list = new ArrayList<>();
+        Set<DevNameDevStatusTuple> existing_targets = new HashSet<>();
+
         for (final Command cmd: cmd_list) {
-            List<DevNameDevStatusTuple> pre_requets = getPreReqPerDevState(
-                    new DevNameDevStatusTuple(cmd.devName, cmd.targetStatus), safety_rules);
-            if (pre_requets.size() > 0) {
-                res_linked_set.addAll(devStatesToCommands(pre_requets));
+            // Get the pre-requests (all actions)
+            DevNameDevStatusTuple cmd_dev_stat = new DevNameDevStatusTuple(cmd.devName, cmd.targetStatus);
+            List<DevNameDevStatusTuple> pre_requets = getPreReqPerDevState(cmd_dev_stat, safety_rules);
+            for (final DevNameDevStatusTuple req: pre_requets) {
+                if (!existing_targets.contains(req)) {
+                    // There is pre-request not guaranteed inside routine.
+                    isSafe = false;
+                    res_list.add(devStateToCommand(req));
+                    existing_targets.add(req);
+                }
             }
-            res_linked_set.add(cmd);
+            if (!existing_targets.contains(cmd_dev_stat)) {
+                res_list.add(cmd);
+                existing_targets.add(cmd_dev_stat);
+            }
         }
 
-        Routine res_routine = new Routine(rt.routineName, new ArrayList<>(res_linked_set));
+        Routine res_routine = new Routine(rt.routineName, res_list);
         res_routine.uniqueRoutineID = rt.uniqueRoutineID;
         res_routine.routineType = rt.routineType;
 
-        if (cmd_list.size() != res_linked_set.size()) {
+        if (!isSafe) {
             System.out.println("**************************************");
             System.out.println("STATIC CHECKING ---- Routine Modified with new Routine: \n" +res_routine);
         }
@@ -248,17 +262,21 @@ public class SystemParametersSingleton
         return res_routine;
     }
 
+
     private List<Command> devStatesToCommands(List<DevNameDevStatusTuple> pre_requets) {
         List<Command> res_cmds = new ArrayList<>();
         for (final DevNameDevStatusTuple req : pre_requets) {
-            // TODO: add more mechanism for command priority.
-            Command cmd = new Command(req.getDevName(),
-                getDeviceInfo(req.getDevName()),
-                req.getDevStatus(),
-                CommandPriority.MUST);
-            res_cmds.add(cmd);
+            res_cmds.add(devStateToCommand(req));
         }
         return res_cmds;
+    }
+
+    private Command devStateToCommand(DevNameDevStatusTuple req) {
+        // TODO: add more mechanism for command priority.
+        return new Command(req.getDevName(),
+            getDeviceInfo(req.getDevName()),
+            req.getDevStatus(),
+            CommandPriority.MUST);
     }
 
     private List<DevNameDevStatusTuple> getPreReqPerDevState(
