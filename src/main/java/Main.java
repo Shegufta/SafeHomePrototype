@@ -74,8 +74,5 @@ public class Main
         Thread.sleep(30000); // To run it for longer time, put a higher value
         System.out.println("Exiting SafeHome program....");
         safeHomeManager.Dispose();
-
-
-
     }
 }
