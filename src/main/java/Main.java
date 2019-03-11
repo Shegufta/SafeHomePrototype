@@ -28,13 +28,17 @@ public class Main
         Routine theater_mode = SystemParametersSingleton.getInstance().getRoutine("theater_mode");
         Routine open_window = SystemParametersSingleton.getInstance().getRoutine("open_window");
 
+        System.out.println("Turn on Fire Alarm & Exhaust Fan!");
+        safeHomeManager.turnOnOffUnplugDevice("exhaust_fan", EventRegisterRemoveStateChangeDevices.DeviceEventType.TURN_ON);
+        safeHomeManager.turnOnOffUnplugDevice("fire_alarm", EventRegisterRemoveStateChangeDevices.DeviceEventType.TURN_ON);
+        Thread.sleep(6000);
+
         System.out.println("Turn On oven....");
         safeHomeManager.sendMsgToRoutineManager(turn_on_oven);
-
         System.out.println("Again sleeping");
         Thread.sleep(6000);
         System.out.println("wakeup");
-
+        
         System.out.println("Turn ON tv!");
         safeHomeManager.turnOnOffUnplugDevice("tv", EventRegisterRemoveStateChangeDevices.DeviceEventType.TURN_ON);
 
@@ -51,6 +55,7 @@ public class Main
 
         System.out.println("Unplug Fire Alarm !");
         safeHomeManager.turnOnOffUnplugDevice("fire_alarm", EventRegisterRemoveStateChangeDevices.DeviceEventType.UNPLUG);
+        Thread.sleep(6000);
 
         System.out.println("Turn On oven AGAIN!....");
         System.out.println("TO RUI: KNOWN ISSUE: never use same routine twice... it will crash the code");

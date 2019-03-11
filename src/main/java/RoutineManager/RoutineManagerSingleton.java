@@ -70,7 +70,12 @@ public class RoutineManagerSingleton
 
     private void receiveMsgFromConcurrencyController(Routine _routine)
     {
-        this.routineIDroutineMgrMap.get(_routine.uniqueRoutineID).executionResult(_routine);
+        if (this.routineIDroutineMgrMap.containsKey(_routine.uniqueRoutineID)) {
+            this.routineIDroutineMgrMap.get(_routine.uniqueRoutineID).executionResult(_routine);
+        } else {
+            System.out.println("Executed an un-registered routine: " + _routine);
+        }
+
         System.out.println("If necessary, this result can be further propagated to the SafeHome class");
     }
 
