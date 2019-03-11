@@ -261,6 +261,22 @@ public class SystemParametersSingleton
 
     /**
      *
+     * @return Return all the influenced dev states of a specific device state
+     */
+    public Map<String, DeviceStatus> getConditionsOfOneDevStat(DevNameDevStatusTuple dev_stat) {
+        Map<String, DeviceStatus> condition_list = new HashMap<>();
+        for (Map.Entry<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> single_rule:
+                this.conditionVsRequiredActionsMap.entrySet()) {
+            if (single_rule.getValue().contains(dev_stat)) {
+                condition_list.put(single_rule.getKey().getDevName(), single_rule.getKey().getDevStatus());
+            }
+        }
+        return condition_list;
+    }
+
+
+    /**
+     *
      * @return Map of safety rules related to a set of devices
      */
     public Map<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> getSafetyRules(List<DevNameDevStatusTuple> devset)

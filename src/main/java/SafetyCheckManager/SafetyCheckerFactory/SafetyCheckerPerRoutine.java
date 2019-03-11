@@ -3,10 +3,7 @@ package SafetyCheckManager.SafetyCheckerFactory;
 import EventBusManager.Events.EventSftyCkrDevMngrMsg;
 import Utility.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Shegufta Ahsan
@@ -27,6 +24,7 @@ public class SafetyCheckerPerRoutine extends SafetyChecker
     {
         System.out.println("\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
         System.out.println("@ DEVICE STATUS CHANGED....");
+        Map<String, DeviceStatus> pre_stats = new HashMap<>();
         for(final Map.Entry<String, DeviceStatus> entry : _devNameStatusMap.entrySet())
         {
             String devName = entry.getKey();
@@ -41,6 +39,7 @@ public class SafetyCheckerPerRoutine extends SafetyChecker
             {
                 DeviceStatus previousStatus = this.devNameStatusMap.getOrDefault(devName, DeviceStatus.UNKNOWN);
                 this.devNameStatusMap.put(devName, currentStatus);
+                pre_stats.put(devName, previousStatus);
                 System.out.println("\t< deviceName: "+ devName + " | previousStatus = " + previousStatus + " | currentStatus " + currentStatus + " >");
             }
         }
@@ -50,11 +49,38 @@ public class SafetyCheckerPerRoutine extends SafetyChecker
         Map<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> safety_rules =
                 SystemParametersSingleton.getInstance().getSafetyRules();
         for (final Map.Entry<String, DeviceStatus> new_dev_stat: _devNameStatusMap.entrySet()) {
-            if (!checkOneDevState(new DevNameDevStatusTuple(new_dev_stat.getKey(),
-                    new_dev_stat.getValue()), safety_rules, this.devNameStatusMap)) {
-                //TODO: what do we want to do for now?
+            String dev = new_dev_stat.getKey();
+            System.out.println("DYNAMIC_CHECKING: checking for DEVICE " + dev + " with STATUS " + new_dev_stat.getValue().toString());
+            if (!checkOneDevState(new DevNameDevStatusTuple(dev, new_dev_stat.getValue()),
+                    safety_rules, this.devNameStatusMap)) {
                 System.out.println("Check Failed!!!!!!!!\n");
+                // TODO: If this is triggered by failure, do we really have someway to handle besides notification?!
             }
+
+            // Get the dev_stats that is influenced by the state change (the conditions e.g. oven is on).
+            Map<String, DeviceStatus> effected_dev_stats = SystemParametersSingleton.getInstance().
+                    getConditionsOfOneDevStat(new DevNameDevStatusTuple(dev, pre_stats.get(dev)));
+
+            // if any running dev_state matches the effected_dev_stats, such devs need to be changed (turn off for now).
+            for (Map.Entry<String, DeviceStatus> e_dev_state: effected_dev_stats.entrySet()) {
+                String dev_name = e_dev_state.getKey();
+                System.out.println("DYNAMIC_CHECKING: checking condition for DEVICE " + dev_name + " avoiding STATE " +
+                        e_dev_state.getValue().toString() + " with ACTUAL STATE " + this.devNameStatusMap.get(dev_name));
+                if (e_dev_state.getValue().equals(this.devNameStatusMap.get(dev_name))) {
+                    System.out.println("Violation detected for DEVICE " + dev_name +
+                            " with STATUS " + e_dev_state.getValue().toString());
+                    // TODO: better decision if violated. (e.g. what if the status of behavior is OFF)
+                    // Shut down the device.
+                    Command cmd = new Command(dev_name,
+                            SystemParametersSingleton.getInstance().getDeviceInfo(dev_name), DeviceStatus.OFF, CommandPriority.BEST_EFFORT);
+                    Routine shut_down_routine = new Routine("shut_down_by_safety_checker", Collections.singletonList(cmd));
+                    System.out.println("Shut down routine: " + shut_down_routine);
+                    // TODO: Need to update the rollback scheme here.
+                    //       If set to null, will lead to null pointer failure in safety checker
+                    this.sendMsgToDeviceManager(shut_down_routine, prepareRollbackFormula(shut_down_routine));
+                }
+            }
+
         }
 
         System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n");
@@ -79,8 +105,6 @@ public class SafetyCheckerPerRoutine extends SafetyChecker
             // TODO: for optimization: limit range of safety rules.
             // For each command, scan all the safety rules
             if (!checkOneDevState(target_dev_stat, safety_rules, all_dev_stats)) {
-                System.out.println("DYNAMIC SAFE CHECKER -- Not safe for DEVICE " + target_dev_stat.getDevName() +
-                        " to STATUS " + target_dev_stat.getDevStatus().toString());
                 isSafe = false;
             }
 
@@ -130,6 +154,7 @@ public class SafetyCheckerPerRoutine extends SafetyChecker
     private boolean checkOneDevState(final DevNameDevStatusTuple target_dev_stat,
                                      final Map<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> safety_rules,
                                      final Map<String, DeviceStatus> all_dev_stats) {
+        // With isSafe flag, could print out all violated rules.
         Boolean isSafe = true;
         for (final DevNameDevStatusTuple condition: safety_rules.keySet()){
             if (!target_dev_stat.equals(condition)) { continue; }
@@ -137,6 +162,11 @@ public class SafetyCheckerPerRoutine extends SafetyChecker
             for (final DevNameDevStatusTuple expected_devstate: safety_rules.get(condition)) {
                 // Compare each expected device state with running state (per-routine level)
                 if (!all_dev_stats.get(expected_devstate.getDevName()).equals(expected_devstate.getDevStatus())) {
+                    System.out.println("DYNAMIC SAFE CHECKER -- Not safe for DEVICE " + target_dev_stat.getDevName() +
+                            " to STATUS " + target_dev_stat.getDevStatus().toString() + " cauz DEVICE " +
+                            expected_devstate.getDevName() + " is STATUS " +
+                            all_dev_stats.get(expected_devstate.getDevName()) + " instead of " +
+                            expected_devstate.getDevStatus());
                     isSafe = false;
                 }
             }
@@ -174,6 +204,11 @@ public class SafetyCheckerPerRoutine extends SafetyChecker
         }
 
         _eventSftyCkrDevMngrMsg.routine.executionResult = routineExecutionStatus;
+        // Update the status map inside safety checker.
+        Routine done_routine = _eventSftyCkrDevMngrMsg.routine;
+        for (final Command cmd: done_routine.commandList) {
+            this.devNameStatusMap.put(cmd.devName, cmd.afterExecutionStatus);
+        }
         this.sendMsgToConcurrencyController(_eventSftyCkrDevMngrMsg.routine);
     }
 
