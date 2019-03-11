@@ -183,6 +183,21 @@ public class SystemParametersSingleton
             //////////////////////////////////////_LOAD_ROUTINES_/////////////////////////////////////////////////
             //////////////////////////////////////////////////////////////////////////////////////////////////////
 
+            /////////////////////////////////////_VALIDATE_ROUTINES_//////////////////////////////////////////////
+            //////////////////////////////////////////////////////////////////////////////////////////////////////
+            for (final String routine_name: this.routineNameRoutineDetailsMap.keySet()) {
+                this.routineNameRoutineDetailsMap.put(
+                        routine_name,
+                        staticSafetyCheckPerRoutine(
+                                this.routineNameRoutineDetailsMap.get(routine_name),
+                                this.conditionVsRequiredActionsMap));
+            }
+
+            /////////////////////////////////////_VALIDATE_ROUTINES_//////////////////////////////////////////////
+            //////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
             System.out.println("************************************************************");
             System.out.println("* Devices, Routines and Safety Rules Loaded Successfully....");
             System.out.println("* socketTimeoutMS = " + this.socketTimeoutMS);
@@ -198,6 +213,64 @@ public class SystemParametersSingleton
             System.exit(1);
         }
 
+    }
+
+    /***
+     *
+     * @param rt: the routine waiting for static checking
+     * @param safety_rules: existing safety rules
+     * @return A routine that satisfied all the safety rules. (The missing actions will be silently added.)
+     */
+    private Routine staticSafetyCheckPerRoutine(Routine rt,
+                                                HashMap<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> safety_rules) {
+        List<Command> cmd_list = rt.commandList;
+        LinkedHashSet<Command> res_linked_set = new LinkedHashSet<>();
+        // LinkedHashSet Remove duplicated commands (e.g. wrong sequence before, after adding pre-requests, the actions occur twice.)
+        // TODO: Needs modification for intentionally duplicated or repetitive cmd in long-running routines
+        for (final Command cmd: cmd_list) {
+            List<DevNameDevStatusTuple> pre_requets = getPreReqPerDevState(
+                    new DevNameDevStatusTuple(cmd.devName, cmd.targetStatus), safety_rules);
+            if (pre_requets.size() > 0) {
+                res_linked_set.addAll(devStatesToCommands(pre_requets));
+            }
+            res_linked_set.add(cmd);
+        }
+
+        Routine res_routine = new Routine(rt.routineName, new ArrayList<>(res_linked_set));
+        res_routine.uniqueRoutineID = rt.uniqueRoutineID;
+        res_routine.routineType = rt.routineType;
+
+        if (cmd_list.size() != res_linked_set.size()) {
+            System.out.println("**************************************");
+            System.out.println("STATIC CHECKING ---- Routine Modified with new Routine: \n" +res_routine);
+        }
+
+        return res_routine;
+    }
+
+    private List<Command> devStatesToCommands(List<DevNameDevStatusTuple> pre_requets) {
+        List<Command> res_cmds = new ArrayList<>();
+        for (final DevNameDevStatusTuple req : pre_requets) {
+            // TODO: add more mechanism for command priority.
+            Command cmd = new Command(req.getDevName(),
+                getDeviceInfo(req.getDevName()),
+                req.getDevStatus(),
+                CommandPriority.MUST);
+            res_cmds.add(cmd);
+        }
+        return res_cmds;
+    }
+
+    private List<DevNameDevStatusTuple> getPreReqPerDevState(
+            DevNameDevStatusTuple target_dev_stat,
+            HashMap<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> safety_rules) {
+        List<DevNameDevStatusTuple> res = new ArrayList<>();
+        for (final DevNameDevStatusTuple condition: safety_rules.keySet()) {
+            if (condition.equals(target_dev_stat)) {
+                return safety_rules.get(target_dev_stat);
+            }
+        }
+        return res;
     }
 
     /**
