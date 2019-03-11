@@ -11,36 +11,31 @@ import java.util.List;
  */
 public class Node implements Runnable
 {
-    public Boolean result;
+    //public Boolean result;
     public Boolean isTraversed;
+    public Boolean isSuccessfullyExecuted;
     public String name;
     public List<Node> parentList;
     public List<Node> childrenList;
-    public Thread thread;
+    public Thread executionThread;
+    public Thread rollbackThread;
     public final Integer EXECUTION_TIME_MS = 1500;
-    private Thread threadStart()
-    {
-        synchronized (this.thread)
-        {
-            if (!this.isTraversed)
-            {
-                this.thread.start();
-                this.isTraversed = true;
-            }
-
-            return this.thread;
-        }
-    }
+    public Boolean isRollback;
 
     public Node(String _name)
     {
         this.name = _name;
-        this.thread = new Thread(this);
-        this.thread.setName(this.name);
+
+        this.executionThread = new Thread(this, this.name + " : Execution Thread");
+        this.rollbackThread = new Thread(this, this.name + " : Rollback Thread");
+
         this.parentList = new ArrayList<Node>();
         this.childrenList = new ArrayList<Node>();
-        this.result = false;
+
+        //this.result = false;
+        this.isSuccessfullyExecuted = false;
         this.isTraversed = false;
+        this.isRollback = false;
     }
 
     public void addParent(Node _parent)
@@ -53,24 +48,90 @@ public class Node implements Runnable
         this.childrenList.add(_child);
     }
 
-    public Boolean traverse() throws InterruptedException
+    private Thread startExecutionThread()
     {
-        synchronized (this.thread)
+        synchronized (this.executionThread)
         {
-            this.isTraversed = true;
+            if (!this.isTraversed)
+            {
+                this.isRollback = false;
+                this.isTraversed = true;
+                this.executionThread.start();
 
-            //if (parentList.size() == 1)
+            }
+
+            return this.executionThread;
+        }
+    }
+
+    private Thread startRollbackThread()
+    {
+        synchronized (this.rollbackThread)
+        {
+            if (!this.isRollback)
+            {
+                this.isRollback = true;
+                this.rollbackThread.start();
+            }
+
+            return this.rollbackThread;
+        }
+    }
+
+    private void rollback() throws InterruptedException
+    {
+        synchronized (this.rollbackThread)
+        {
+            this.isRollback = true;
+
+            try
+            {// Rollback
+                if(this.isSuccessfullyExecuted)
+                {
+                    this.isSuccessfullyExecuted = false;
+                    //System.out.println(this.name + " sleeping");
+                    Thread.sleep(EXECUTION_TIME_MS);
+                    System.out.println("< ROLLBACK " + this.name + " >");
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+
             if (!parentList.isEmpty())
             {
-//                this.result = parentList.get(0).traverse();
-//            }
-//            else if (1 < parentList.size())
-//            {
+                List<Thread> rollBackThreadList = new ArrayList<>();
+
+                for (Node parentToRollback : this.parentList)
+                {
+                    rollBackThreadList.add(parentToRollback.startRollbackThread());
+                }
+
+                for (Thread thread : rollBackThreadList)
+                { //wait till all rollback complete
+                    thread.join();
+                }
+            }
+
+        }
+    }
+
+    public Boolean traverse() throws InterruptedException
+    {
+        synchronized (this.executionThread)
+        {
+            this.isTraversed = true; // do not remove it from here.
+
+            Boolean parentsExecutionResult = true;
+
+            if (!parentList.isEmpty())
+            {
                 List<Thread> threadList = new ArrayList<>();
 
                 for (Node parent : this.parentList)
                 {
-                    threadList.add(parent.threadStart());
+                    threadList.add(parent.startExecutionThread());
                 }
 
                 for (Thread thread : threadList)
@@ -78,39 +139,66 @@ public class Node implements Runnable
                     thread.join();
                 }
 
-                this.result = true;
                 for (Node parent : this.parentList)
                 {
-                    this.result &= parent.result;
+                    parentsExecutionResult &= parent.isSuccessfullyExecuted;
                 }
-            }
-            else
-            {// this is the top most node
-                this.result = true;
-            }
+            }// the else part: if no parent, then parent result is by default true
 
-            if (this.result)
+            Boolean isRollBack = !parentsExecutionResult;
+
+            if (!isRollBack)
             {
                 try
                 {
                     //System.out.println(this.name + " sleeping");
-                    Thread.sleep(EXECUTION_TIME_MS);
-                    System.out.println("< " + this.name + " >");
-                } catch (Exception ex)
+
+
+                    if(0 == this.name.compareTo("a"))
+                    {
+                        Thread.sleep(EXECUTION_TIME_MS);
+                        System.out.println("< Fail " + this.name + " >");
+                        this.isSuccessfullyExecuted = false;
+                    }
+                    else
+                    {
+                        Thread.sleep(EXECUTION_TIME_MS);
+                        System.out.println("< Execute " + this.name + " >");
+                        this.isSuccessfullyExecuted = true;
+                    }
+
+                    isRollBack = !this.isSuccessfullyExecuted;
+                }
+                catch (Exception ex)
                 {
 
                 }
             }
+
+            if(isRollBack)
+            {
+                // go upwards again, to roll-back
+                this.startRollbackThread().join(); // wait till all rollback completes
+                //this.isSuccessfullyExecuted = false;
+            }
         }
 
-        return this.result; // if execution successful
+        return this.isSuccessfullyExecuted; // if execution successful
     }
 
     public void run()
     {
         try
         {
-            this.traverse();
+            if(this.isRollback)
+            {
+                this.rollback();
+            }
+            else
+            {
+                this.traverse();
+            }
+
         }
         catch (Exception ex)
         {
@@ -129,6 +217,14 @@ public class Node implements Runnable
         Node g = new Node("g");
         Node h = new Node("h");
 
+/*
+        a.addParent(b);
+        b.addParent(c);
+        b.addParent(d);
+
+        a.traverse();
+*/
+
         a.addParent(b);
         a.addParent(c);
 
@@ -140,5 +236,6 @@ public class Node implements Runnable
 
 
         a.traverse();
+
     }
 }
