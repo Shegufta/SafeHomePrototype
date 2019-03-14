@@ -86,6 +86,7 @@ public class HS110Client
 
     public void dispose() throws IOException
     {
+        this.isDisposed = true;
         this.sbaCloseSockets();
     }
 
@@ -109,10 +110,8 @@ public class HS110Client
         this.isConnectionEstablishedForPersistentConnection = true;
     }
 
-    private void sbaCloseSockets() throws IOException
+    public synchronized void sbaCloseSockets() throws IOException
     {
-        this.isDisposed = true;
-
         if(null != this.in)
         {
             this.in.close();
@@ -129,8 +128,9 @@ public class HS110Client
         {
             this.socket.close();
             this.socket = null;
-            //this.socket.
         }
+
+        this.isConnectionEstablishedForPersistentConnection = false;
     }
 
     
@@ -170,21 +170,18 @@ public class HS110Client
         // read
         byte[] buffer = new byte[4096];
         int r = in.read(buffer);
-        if (r == -1) return null;
+        if (r == -1)
+        {
+            this.sbaCloseSockets(); // does not matter if it is persistent or not. The socket fails, hence close it.
+            return null;
+        }
 
         ret = new byte[r];
         System.arraycopy(buffer, 0, ret, 0, r);
 
         if (!this.devInfo.isPersistentTCP())
         {
-            this.out.close();
-            this.out = null;
-
-            this.in.close();
-            this.in = null;
-
-            this.socket.close();
-            this.socket = null;
+            this.sbaCloseSockets();
         }
 
         return ret;
@@ -228,15 +225,24 @@ public class HS110Client
     public GetSysInfo getCurrentPlugStatus() throws IOException
     {
         HS110Response response = this.sysInfo();
+        if(response == null)
+        {
+            return null;
+        }
         HS110System system = response.getSystem();
         GetSysInfo sysInfo = (GetSysInfo)system.getSysInfo();
 
         return sysInfo;
     }
 
-    public boolean isON() throws IOException
+    public boolean isON() throws Exception
     {
-        return (1 == this.getCurrentPlugStatus().getRelayState());
+        GetSysInfo getSysInfo = this.getCurrentPlugStatus();
+
+        if(null == getSysInfo)
+            throw new Exception("cannot read from socket, null received");
+
+        return (1 == getSysInfo.getRelayState());
     }
     
     public GetRealtime consumption() throws Exception

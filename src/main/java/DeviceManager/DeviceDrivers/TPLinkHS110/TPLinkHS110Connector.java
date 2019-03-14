@@ -108,7 +108,7 @@ public class TPLinkHS110Connector extends DeviceConnector
                 }
             }
         }
-        catch (IOException ioEx)
+        catch (Exception ioEx)
         {
             //System.out.println("Inside TPLinkHS110Connector::getCurrentStatus() " + ioEx );
             return DeviceStatus.TIMEOUT;
@@ -159,7 +159,7 @@ public class TPLinkHS110Connector extends DeviceConnector
             {
                 try
                 {
-                    this.hs110Client.dispose();
+                    this.hs110Client.sbaCloseSockets();
                 }
                 catch(IOException ioEx)
                 {
