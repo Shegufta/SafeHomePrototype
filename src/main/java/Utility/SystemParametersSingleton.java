@@ -31,6 +31,7 @@ public class SystemParametersSingleton
     public Map<String, DeviceInfo> devNameDevInfoMap;
     public Map<String, Routine> routineNameRoutineDetailsMap;
     HashMap<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> conditionVsRequiredActionsMap;
+    HashMap<String, HashMap<DeviceStatus, List<DevNameDevStatusTuple>>> actionVsRelatedConditionsMap;
 
     private static SystemParametersSingleton singleton;
 
@@ -65,10 +66,9 @@ public class SystemParametersSingleton
         return true;
     }
 
-    private Boolean validateConditionVsRequiredActionsMap(HashMap<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> conditionVsRequiredActionsMap)
-    {
-        //TODO (rui): validate if all device names are present in the Device List
-        //TODO: validate if there are conflicting action rules etc.
+    private Boolean validateConditionVsRequiredActionsMap(
+            HashMap<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> conditionVsRequiredActionsMap) {
+        //TODO: validate if all device names are present in the Device List
 
         return true;
     }
@@ -126,15 +126,38 @@ public class SystemParametersSingleton
             List<ActionConditionTuple> safetyListFromJson = objectMapper.readValue(new File(safetyListJsonPath), new TypeReference<List<ActionConditionTuple>>(){} );
 
             this.conditionVsRequiredActionsMap = new HashMap<>();
+            this.actionVsRelatedConditionsMap = new HashMap<>();
 
             for(ActionConditionTuple actionConditionTuple : safetyListFromJson)
             {
                 DevNameDevStatusTuple condition = actionConditionTuple.getCondition();
-                if(!this.conditionVsRequiredActionsMap.containsKey(condition))
-                {
+                DevNameDevStatusTuple action = actionConditionTuple.getAction();
+
+                System.out.println("Validating rules: if " + condition.toString() + " then " +  action.toString());
+
+                if (!this.conditionVsRequiredActionsMap.isEmpty()) {
+                    boolean isValid = validateSingleSafetyRules(
+                        condition, action, new HashMap<>(this.conditionVsRequiredActionsMap), new HashMap<>(this.actionVsRelatedConditionsMap));
+                }
+
+                // Update condition -> List<action> map
+                if(!this.conditionVsRequiredActionsMap.containsKey(condition)) {
                     this.conditionVsRequiredActionsMap.put(condition, new ArrayList<>());
                 }
-                this.conditionVsRequiredActionsMap.get(condition).add(actionConditionTuple.getAction());
+                this.conditionVsRequiredActionsMap.get(condition).add(action);
+
+                // Update action -> List<condition> map
+                String act_dev_name = action.getDevName();
+                DeviceStatus act_dev_stat = action.getDevStatus();
+                if (!this.actionVsRelatedConditionsMap.containsKey(act_dev_name)) {
+                    this.actionVsRelatedConditionsMap.put(act_dev_name, new HashMap<>());
+                    this.actionVsRelatedConditionsMap.get(act_dev_name).put(act_dev_stat, new ArrayList<>());
+                } else if (!this.actionVsRelatedConditionsMap.get(act_dev_name).containsKey(act_dev_stat)) {
+                    this.actionVsRelatedConditionsMap.get(act_dev_name).put(act_dev_stat, new ArrayList<>());
+                }
+//                actionVsRelatedConditionsMap.forEach((key, value) -> System.out.println(key + value.toString()));
+
+                this.actionVsRelatedConditionsMap.get(act_dev_name).get(act_dev_stat).add(condition);
             }
 
 //            for(Map.Entry<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> tuple : conditionVsRequiredActionsMap.entrySet())
@@ -185,6 +208,7 @@ public class SystemParametersSingleton
 
             /////////////////////////////////////_VALIDATE_ROUTINES_//////////////////////////////////////////////
             //////////////////////////////////////////////////////////////////////////////////////////////////////
+            // This is part of the static chekcing (Checker in high-level design)
             for (final String routine_name: this.routineNameRoutineDetailsMap.keySet()) {
                 this.routineNameRoutineDetailsMap.put(
                         routine_name,
@@ -213,6 +237,108 @@ public class SystemParametersSingleton
             System.exit(1);
         }
 
+    }
+
+    private boolean validateSingleSafetyRules(
+        DevNameDevStatusTuple condition, DevNameDevStatusTuple action,
+        HashMap<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> conditionVsRequiredActionsMap,
+        HashMap<String, HashMap<DeviceStatus, List<DevNameDevStatusTuple>>> actionVsRelatedConditionsMap) {
+
+        /* Starting validating conflict rules. Below is supposed to be part of static checking in high-level design.*/
+        // Category 1: Each condition could only ``enforce'' at most one condition of each device. TODO: any exception?
+        //             If Multiple, only keep the first one.
+        if (conditionVsRequiredActionsMap.containsKey(condition)) {
+            for (final DevNameDevStatusTuple existing_action : conditionVsRequiredActionsMap.get(condition)) {
+                if (action.equals(existing_action)) {
+                    System.out.println("STATIC CHECKING -- DUPILICATED RULES");
+                    return false;
+                }
+                if (action.getDevName().equals(existing_action.getDevName()) &&
+                    !action.getDevStatus().equals(existing_action.getDevStatus())) {
+                    System.out.println("STATIC CHECKING -- Conflict Safety rules with existing rules with same condition");
+                    return false;
+                }
+            }
+        }
+
+        // Category 2: The condition sets of two different states of the same dev should always be the same.
+        //             If violated, send out notification. (maybe remove the later one?)
+
+        final String act_dev_name = action.getDevName();
+        final DeviceStatus act_dev_stat = action.getDevStatus();
+
+        if (!actionVsRelatedConditionsMap.containsKey(act_dev_name)) {
+            return true;
+        }
+
+        final Map<DeviceStatus, List<String>> dev_set = getConditionDevSetMapForOneActionDev(actionVsRelatedConditionsMap.get(act_dev_name));
+        if (dev_set.containsKey(act_dev_stat)) {
+            dev_set.get(act_dev_stat).add(condition.getDevName());
+        } else {
+            dev_set.put(act_dev_stat, Collections.singletonList(condition.getDevName()));
+        }
+
+        final List<String> dev_set_max = getLargestDevSetForOneActionDev(dev_set);
+
+//        for (Map.Entry<DeviceStatus, List<String>> entry : dev_set.entrySet()) {
+//            System.out.println("-----------------------");
+//            System.out.println("Device: " + act_dev_name + " Status: " + entry.getKey().toString() + " con_set: " + dev_set.toString());
+//        }
+
+        for (final DeviceStatus dev_stat : dev_set.keySet()) {
+            if (!dev_set_max.containsAll(dev_set.get(dev_stat))) {
+                System.out.println("STATIC CHECKING -- IF A THEN B  AND IF C THEN NOT B conflict happens for " + act_dev_name + act_dev_stat);
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private List<String> getLargestDevSetForOneActionDev(Map<DeviceStatus, List<String>> dev_set) {
+        List<String> res = new ArrayList<>();
+        int max_size = 0;
+        for (final List<String> set: dev_set.values()) {
+            if (set.size() > max_size) { res = new ArrayList<>(set);}
+        }
+        return res;
+    }
+
+    private Map<DeviceStatus, List<String>> getConditionDevSetMapForOneActionDev(
+        Map<DeviceStatus, List<DevNameDevStatusTuple>> deviceStatusListHashMap) {
+        final Map<DeviceStatus, List<String>> res = new HashMap<>();
+        for (final DeviceStatus stat: deviceStatusListHashMap.keySet()) {
+            res.put(stat, new ArrayList<>());
+            final List<DevNameDevStatusTuple> conditions = deviceStatusListHashMap.get(stat);
+            for (final DevNameDevStatusTuple cond : conditions) {
+                res.get(stat).add(cond.getDevName());
+            }
+        }
+        return res;
+    }
+
+    private HashMap<DevNameDevStatusTuple,List<DevNameDevStatusTuple>> getValidSafetyRules(
+            HashMap<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> conditionVsRequiredActionsMap) {
+
+        // TODO: This func is for optimization of group safety rules. (Unfinished)
+
+        /* Starting validating conflict rules. Below is supposed to be part of static checking in high-level design.*/
+        // Category 1: Each condition could only ``enforce'' at most one condition of each device.
+        //             If Multiple, only keep the first one.
+        for (final List<DevNameDevStatusTuple> action_list : conditionVsRequiredActionsMap.values()) {
+            final Set<String> act_devs = new HashSet<>();
+            Iterator<DevNameDevStatusTuple> itr = action_list.iterator();
+            while (itr.hasNext()) {
+                final String dev_name = itr.next().getDevName();
+                if (act_devs.contains(dev_name)) { itr.remove(); } else { act_devs.add(dev_name); }
+            }
+        }
+        // Category 2: The condition sets of two different states of the same dev should always be the same.
+        //             If violated, send out notification. (maybe remove the later one?)
+
+        // Category 3: TODO: loop detection
+
+        return new HashMap<>(conditionVsRequiredActionsMap);
     }
 
     /***
