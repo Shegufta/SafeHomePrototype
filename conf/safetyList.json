@@ -5,11 +5,24 @@
     "conditionDevName" : "oven",
     "conditionDevStatus" : "ON"
   },
-
   {
     "actionDevName" : "exhaust_fan",
     "actionDevStatus" : "ON",
     "conditionDevName" : "oven",
+    "conditionDevStatus" : "ON"
+  },
+
+  {
+    "actionDevName" : "fire_alarm",
+    "actionDevStatus" : "ON",
+    "conditionDevName" : "oven",
+    "conditionDevStatus" : "ON"
+  },
+
+  {
+    "actionDevName" : "fire_alarm",
+    "actionDevStatus" : "OFF",
+    "conditionDevName" : "window",
     "conditionDevStatus" : "ON"
   },
 
