@@ -8,6 +8,22 @@
   },
 
   {
+    "routineName":"turn_on_bedroomLight",
+    "commandList":
+    [
+      {"devName":"bedroom_light","targetStatus":"ON","commandPriority":"MUST"}
+    ]
+  },
+
+  {
+    "routineName":"turn_off_bedroomLight",
+    "commandList":
+    [
+      {"devName":"bedroom_light","targetStatus":"OFF","commandPriority":"MUST"}
+    ]
+  },
+
+  {
     "routineName":"turn_on_coffee_maker",
     "commandList":
     [

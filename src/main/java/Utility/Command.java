@@ -5,12 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Map;
 
-/**
- * @author Shegufta Ahsan
- * @project SafeHomePrototype
- * @date 2/28/2019
- * @time 12:54 AM
- */
+
+
 public class Command
 {
     //public List<DeviceInfo> deviceInfoList;   //SBA: for now lets assume a command contains only a single device.
@@ -82,10 +78,7 @@ public class Command
                 '}';
     }
 
-    /**
-     *
-     * @return rollBack command
-     */
+
     @JsonIgnore
     public Command getRollBackCommand()
     {

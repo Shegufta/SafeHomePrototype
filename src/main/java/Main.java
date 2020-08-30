@@ -24,6 +24,25 @@ public class Main
 
         SafeHomeManager safeHomeManager = new SafeHomeManager();
 
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        Routine turn_off_bedroomLight = SystemParametersSingleton.getInstance().getRoutine("turn_off_bedroomLight");
+        System.out.println("Turn Off Bedroom Light....");
+        safeHomeManager.sendMsgToRoutineManager(turn_off_bedroomLight);
+
+        System.out.println("sleep for 6 second");
+        Thread.sleep(6000);
+        System.out.println("wakeup");
+
+
+        Routine turn_on_bedroomLight = SystemParametersSingleton.getInstance().getRoutine("turn_on_bedroomLight");
+        System.out.println("Turn on Bedroom Light....");
+        safeHomeManager.sendMsgToRoutineManager(turn_on_bedroomLight);
+
+        System.out.println("sleep for 6 second");
+        Thread.sleep(6000);
+        System.out.println("wakeup");
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
         Routine turn_on_oven = SystemParametersSingleton.getInstance().getRoutine("turn_on_oven");
         Routine theater_mode = SystemParametersSingleton.getInstance().getRoutine("theater_mode");
         Routine open_window = SystemParametersSingleton.getInstance().getRoutine("open_window");
