@@ -15,11 +15,14 @@ public class LockTable
     public Map<String, List<Routine>> perDevRoutineListForWeakScheduling = null;
     List<Routine> weakSchedulingSpecialLockTable = null;
 
+    final private static int BUFFER_AFTER_LAST_COMMAND_OR_ROUTINE_ENDS_MILLISEC = 1;
+
     public CONSISTENCY_TYPE consistencyType;
     public long safeHomeStartTime;
 
     public LockTable(List<String> devIDlist, CONSISTENCY_TYPE _consistencyType, long _safeHomeStartTime)
     {
+        assert(1 <= LockTable.BUFFER_AFTER_LAST_COMMAND_OR_ROUTINE_ENDS_MILLISEC); // This buffer should be GTE 1
         this.lockTable = new HashMap<>();
 
         safeHomeStartTime = _safeHomeStartTime;
@@ -431,12 +434,14 @@ public class LockTable
             //lazyScheduling(rtnList, _simulationStartTime);
             lazyScheduling(rtnList);
             initiateNonWV_devID_lastAccesedRtn_Map();
+            return;
         }
 
         if(this.consistencyType == CONSISTENCY_TYPE.WEAK)
         {
             //this.weakScheduling(rtnList, _simulationStartTime);
             this.weakScheduling(rtnList); // NOTE: devID_lastAccesedRtn_Map is initiated inside this function.
+            return;
         }
 
 
@@ -535,7 +540,7 @@ public class LockTable
             }
         }
 
-        long routineStartTime = Math.max(registeredRtnMaxEndTime, rtn.registrationTime);
+        long routineStartTime = Math.max( (registeredRtnMaxEndTime + LockTable.BUFFER_AFTER_LAST_COMMAND_OR_ROUTINE_ENDS_MILLISEC) , rtn.registrationTime);
 
         this.registerRoutineFromExactTime(rtn, routineStartTime);
 
@@ -557,7 +562,7 @@ public class LockTable
             }
         }
 
-        long routineStartTime = Math.max(overlappintRtnMaxEndTime, rtn.registrationTime);
+        long routineStartTime = Math.max( (overlappintRtnMaxEndTime + LockTable.BUFFER_AFTER_LAST_COMMAND_OR_ROUTINE_ENDS_MILLISEC), rtn.registrationTime);
 
         this.registerRoutineFromExactTime(rtn, routineStartTime);
 
@@ -577,7 +582,7 @@ public class LockTable
 
         for(commandIdx = 1 ; commandIdx < rtn.commandList.size() ; ++commandIdx)
         {
-            rtn.commandList.get(commandIdx).startTime = rtn.commandList.get(commandIdx - 1).getCmdEndTime();
+            rtn.commandList.get(commandIdx).startTime = rtn.commandList.get(commandIdx - 1).getCmdEndTime() + LockTable.BUFFER_AFTER_LAST_COMMAND_OR_ROUTINE_ENDS_MILLISEC;
 
             devID = rtn.getDevID(commandIdx);
             this.lockTable.get(devID).add(rtn); // insert in the list
@@ -757,7 +762,7 @@ public class LockTable
             {
                 if(cmdStartTime <= scanStartTime)
                 {// overlap with the scan line
-                    scanStartTime = cmdEndTime; // shift the scan line
+                    scanStartTime = cmdEndTime + LockTable.BUFFER_AFTER_LAST_COMMAND_OR_ROUTINE_ENDS_MILLISEC; // shift the scan line
                     continue;
                 }
                 else
