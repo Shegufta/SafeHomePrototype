@@ -412,7 +412,7 @@ public class Routine implements Comparator<Routine>
 
         for(Command cmd : this.commandList)
         {
-            str += cmd;
+            str += cmd + " || ";
         }
 
         str += " }";

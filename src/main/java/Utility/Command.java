@@ -139,7 +139,7 @@ public class Command
         return "Command{" +
                 "devName='" + devName + '\'' +
                 ",startTime=" + startTime +
-                ",endTime=" + startTime + durationMilliSec +
+                ",endTime=" + getCmdEndTime() +
                 ", deviceInfo=" + deviceInfo +
                 ", commandPriority=" + commandPriority +
                 ", targetStatus=" + targetStatus +
