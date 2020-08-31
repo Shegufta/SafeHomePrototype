@@ -3,7 +3,7 @@
     "routineName":"turn_on_oven",
     "commandList":
     [
-      {"devName":"oven","targetStatus":"ON","commandPriority":"MUST"}
+      {"devName":"oven","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10000", "endStatus":"OFF"}
     ]
   },
 
@@ -11,7 +11,24 @@
     "routineName":"turn_on_bedroomLight",
     "commandList":
     [
-      {"devName":"bedroom_light","targetStatus":"ON","commandPriority":"MUST"}
+      {"devName":"bedroom_light","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10000", "endStatus":"OFF"}
+    ]
+  },
+
+  {
+    "routineName":"turn_on_air_freshener",
+    "commandList":
+    [
+      {"devName":"air_freshener","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"5000", "endStatus":"OFF"}
+    ]
+  },
+
+  {
+    "routineName":"bedroomRoutine2",
+    "commandList":
+    [
+      {"devName":"air_freshener","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"5000", "endStatus":"OFF"},
+      {"devName":"bedroom_light","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"3000", "endStatus":"OFF"}
     ]
   },
 
@@ -19,7 +36,7 @@
     "routineName":"turn_off_bedroomLight",
     "commandList":
     [
-      {"devName":"bedroom_light","targetStatus":"OFF","commandPriority":"MUST"}
+      {"devName":"bedroom_light","commandPriority":"MUST","targetStatus":"OFF","durationMilliSec":"10000", "endStatus":"ON"}
     ]
   },
 
@@ -27,32 +44,32 @@
     "routineName":"turn_on_coffee_maker",
     "commandList":
     [
-      {"devName":"coffee_maker","targetStatus":"ON","commandPriority":"MUST"},
-      {"devName":"fire_alarm","targetStatus":"ON","commandPriority":"MUST"}
+      {"devName":"coffee_maker","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10000", "endStatus":"OFF"},
+      {"devName":"fire_alarm","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10000", "endStatus":"OFF"}
     ]
   },
 
   {"routineName":"open_window",
     "commandList":
     [
-      {"devName":"window","targetStatus":"ON","commandPriority":"MUST"}
+      {"devName":"window","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10000", "endStatus":"OFF"}
     ]
   },
 
   {"routineName":"theater_mode",
     "commandList":
     [
-      {"devName":"tv","targetStatus":"ON","commandPriority":"MUST"},
-      {"devName":"speaker","targetStatus":"ON","commandPriority":"MUST"},
-      {"devName":"light","targetStatus":"OFF","commandPriority":"BEST_EFFORT"}
+      {"devName":"tv","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10000", "endStatus":"OFF"},
+      {"devName":"speaker","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10000", "endStatus":"OFF"},
+      {"devName":"light","commandPriority":"BEST_EFFORT","targetStatus":"OFF","durationMilliSec":"10000", "endStatus":"ON"}
     ]
   },
 
   {"routineName":"smart_plug_test",
     "commandList":
     [
-      {"devName":"exhaust_fan","targetStatus":"ON","commandPriority":"MUST"},
-      {"devName":"smart_plug","targetStatus":"ON","commandPriority":"MUST"}
+      {"devName":"exhaust_fan","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10000", "endStatus":"OFF"},
+      {"devName":"smart_plug","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10000", "endStatus":"OFF"}
     ]
   }
 ]

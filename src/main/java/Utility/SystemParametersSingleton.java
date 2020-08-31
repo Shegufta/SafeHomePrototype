@@ -3,7 +3,6 @@ package Utility;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import javax.swing.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -19,21 +18,30 @@ public class SystemParametersSingleton
 {
     public final String PROPERTY_FILE_NAME = "conf/SafeHomePrototype.config";
 
-    public final String KEY_DEVICE_LIST_JSON_PATH = "deviceListJSONpath";
-    public final String KEY_ROUTINE_LIST_JSON_PATH = "routineListJSONpath";
-    public final String KEY_SAFETY_LIST_JSON_PATH = "safetyListJSONpath";
-    public final String KEY_SOCKET_TIMEOUT_MS = "socketTimeoutMS";
-    public final String KEY_HEARTBEAT_INTERVAL_MS = "heartBeatIntervalMS";
+    private final String KEY_DEVICE_LIST_JSON_PATH = "deviceListJSONpath";
+    private final String KEY_ROUTINE_LIST_JSON_PATH = "routineListJSONpath";
+    private final String KEY_SAFETY_LIST_JSON_PATH = "safetyListJSONpath";
+    private final String KEY_SOCKET_TIMEOUT_MS = "socketTimeoutMS";
+    private final String KEY_HEARTBEAT_INTERVAL_MS = "heartBeatIntervalMS";
+    private final String CONSISTENCY_TYPE_STR = "consistencyType";
+
+    public final boolean IS_PRE_LEASE_ALLOWED = true;
+    public final boolean IS_POST_LEASE_ALLOWED = true;
 
     public Integer socketTimeoutMS = -1;
     public Integer heartBeatIntervalMS = -1;
 
     public Map<String, DeviceInfo> devNameDevInfoMap;
-    public Map<String, Routine> routineNameRoutineDetailsMap;
-    HashMap<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> conditionVsRequiredActionsMap;
-    HashMap<String, HashMap<DeviceStatus, List<DevNameDevStatusTuple>>> actionVsRelatedConditionsMap;
+    private Map<String, Routine> routineNameRoutineDetailsMap;
+    //HashMap<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> conditionVsRequiredActionsMap;
+    //HashMap<String, HashMap<DeviceStatus, List<DevNameDevStatusTuple>>> actionVsRelatedConditionsMap;
 
     private static SystemParametersSingleton singleton;
+
+    public static List<String> devIDList;
+    public static CONSISTENCY_TYPE consistencyType;
+
+    private String routineListJsonPath = "";
 
     private String getOSindependentPath(String filePath)
     {
@@ -66,12 +74,14 @@ public class SystemParametersSingleton
         return true;
     }
 
+    /*
     private Boolean validateConditionVsRequiredActionsMap(
             HashMap<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> conditionVsRequiredActionsMap) {
         //TODO: validate if all device names are present in the Device List
 
         return true;
     }
+    */
 
     private SystemParametersSingleton()
     {
@@ -86,6 +96,20 @@ public class SystemParametersSingleton
             //////////////////////////////////////_LOAD_SINGLE_PARAMETERS_////////////////////////////////////////
             this.socketTimeoutMS = Integer.valueOf( properties.getProperty(this.KEY_SOCKET_TIMEOUT_MS) );
             this.heartBeatIntervalMS = Integer.valueOf( properties.getProperty(this.KEY_HEARTBEAT_INTERVAL_MS) );
+
+            String consistencyTypeStr =  properties.getProperty(this.CONSISTENCY_TYPE_STR);
+
+            try
+            {
+                SystemParametersSingleton.consistencyType = Enum.valueOf(CONSISTENCY_TYPE.class, consistencyTypeStr);
+            }
+            catch (IllegalArgumentException ilex)
+            {
+                System.out.println("conf/SafeHomePrototype.config: consistencyType = " + consistencyTypeStr +
+                        "is not a member of Enum CONSISTENCY_TYPE \n" + ilex.toString());
+
+                System.exit(1);
+            }
             //////////////////////////////////////_LOAD_SINGLE_PARAMETERS_////////////////////////////////////////
             //////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -97,8 +121,12 @@ public class SystemParametersSingleton
 
             devNameDevInfoMap = new HashMap<>();
 
+            SystemParametersSingleton.devIDList = new ArrayList();
+
             for(DeviceInfo devInfo : devListFromJson)
             {
+                SystemParametersSingleton.devIDList.add(devInfo.getDevName());
+
                 if(this.devNameDevInfoMap.containsKey(devInfo.getDevName()))
                 {
                     System.out.println("the device : " + devInfo.getDevName() + " appears more than once... double check " + deviceListJsonPath);
@@ -122,6 +150,7 @@ public class SystemParametersSingleton
 
             //////////////////////////////////////////////////////////////////////////////////////////////////////
             //////////////////////////////////////_LOAD_SAFETY_RULES_/////////////////////////////////////////////
+            /*
             String safetyListJsonPath = this.getOSindependentPath(properties.getProperty(this.KEY_SAFETY_LIST_JSON_PATH));
             List<ActionConditionTuple> safetyListFromJson = objectMapper.readValue(new File(safetyListJsonPath), new TypeReference<List<ActionConditionTuple>>(){} );
 
@@ -155,15 +184,10 @@ public class SystemParametersSingleton
                 } else if (!this.actionVsRelatedConditionsMap.get(act_dev_name).containsKey(act_dev_stat)) {
                     this.actionVsRelatedConditionsMap.get(act_dev_name).put(act_dev_stat, new ArrayList<>());
                 }
-//                actionVsRelatedConditionsMap.forEach((key, value) -> System.out.println(key + value.toString()));
 
                 this.actionVsRelatedConditionsMap.get(act_dev_name).get(act_dev_stat).add(condition);
             }
 
-//            for(Map.Entry<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> tuple : conditionVsRequiredActionsMap.entrySet())
-//            {
-//                System.out.println("CONDITION = " + tuple.getKey() + " || list =  " + tuple.getValue());
-//            }
 
             if(!this.validateConditionVsRequiredActionsMap(this.conditionVsRequiredActionsMap))
             {
@@ -173,13 +197,14 @@ public class SystemParametersSingleton
                 assert(false); // assert does not work with some IDE. Hence I am using System.exit(1)
                 System.exit(1);
             }
+            */
             //////////////////////////////////////_LOAD_SAFETY_RULES_/////////////////////////////////////////////
             //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
             //////////////////////////////////////////////////////////////////////////////////////////////////////
             //////////////////////////////////////_LOAD_ROUTINES_/////////////////////////////////////////////////
-            String routineListJsonPath = this.getOSindependentPath(properties.getProperty(this.KEY_ROUTINE_LIST_JSON_PATH));
+            routineListJsonPath = this.getOSindependentPath(properties.getProperty(this.KEY_ROUTINE_LIST_JSON_PATH));
             List<Routine> routineListFromJson = objectMapper.readValue(new File(routineListJsonPath), new TypeReference<List<Routine>>(){} );
 
             this.routineNameRoutineDetailsMap = new HashMap<>();
@@ -208,7 +233,8 @@ public class SystemParametersSingleton
 
             /////////////////////////////////////_VALIDATE_ROUTINES_//////////////////////////////////////////////
             //////////////////////////////////////////////////////////////////////////////////////////////////////
-            // This is part of the static chekcing (Checker in high-level design)
+            // This is part of the static checking (Checker in high-level design)
+            /*
             for (final String routine_name: this.routineNameRoutineDetailsMap.keySet()) {
                 this.routineNameRoutineDetailsMap.put(
                         routine_name,
@@ -216,6 +242,7 @@ public class SystemParametersSingleton
                                 this.routineNameRoutineDetailsMap.get(routine_name),
                                 this.conditionVsRequiredActionsMap));
             }
+            */
 
             /////////////////////////////////////_VALIDATE_ROUTINES_//////////////////////////////////////////////
             //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -341,24 +368,25 @@ public class SystemParametersSingleton
         return new HashMap<>(conditionVsRequiredActionsMap);
     }
 
-    /***
-     *
-     * @param rt: the routine waiting for static checking
-     * @param safety_rules: existing safety rules
-     * @return A routine that satisfied all the safety rules. (The missing actions will be silently added.)
-     */
-    private Routine staticSafetyCheckPerRoutine(Routine rt,
-                                                HashMap<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> safety_rules) {
+
+
+    /*
+
+    // @param rt: the routine waiting for static checking
+     // @param safety_rules: existing safety rules
+     // @return A routine that satisfied all the safety rules. (The missing actions will be silently added.)
+    private RoutinePrototype staticSafetyCheckPerRoutine(RoutinePrototype rt,
+                                                         HashMap<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> safety_rules) {
 
         // TODO: Needs modification for intentionally duplicated or repetitive cmd in long-running routines
 
         // LinkedHashSet does not work well for Command. Thu,s here use List and existing_targets together to track.
         Boolean isSafe = true;
-        List<Command> cmd_list = rt.commandList;
-        List<Command> res_list = new ArrayList<>();
+        List<CommandPrototype> cmd_list = rt.commandList;
+        List<CommandPrototype> res_list = new ArrayList<>();
         Set<DevNameDevStatusTuple> existing_targets = new HashSet<>();
 
-        for (final Command cmd: cmd_list) {
+        for (final CommandPrototype cmd: cmd_list) {
             // Get the pre-requests (all actions)
             DevNameDevStatusTuple cmd_dev_stat = new DevNameDevStatusTuple(cmd.devName, cmd.targetStatus);
             List<DevNameDevStatusTuple> pre_requets = getPreReqPerDevState(cmd_dev_stat, safety_rules);
@@ -376,9 +404,8 @@ public class SystemParametersSingleton
             }
         }
 
-        Routine res_routine = new Routine(rt.routineName, res_list);
+        RoutinePrototype res_routine = new RoutinePrototype(rt.routineName, res_list);
         res_routine.uniqueRoutineID = rt.uniqueRoutineID;
-        res_routine.routineType = rt.routineType;
 
         if (!isSafe) {
             System.out.println("**************************************");
@@ -387,23 +414,26 @@ public class SystemParametersSingleton
 
         return res_routine;
     }
+    */
 
 
-    private List<Command> devStatesToCommands(List<DevNameDevStatusTuple> pre_requets) {
-        List<Command> res_cmds = new ArrayList<>();
+    /*
+    private List<CommandPrototype> devStatesToCommands(List<DevNameDevStatusTuple> pre_requets) {
+        List<CommandPrototype> res_cmds = new ArrayList<>();
         for (final DevNameDevStatusTuple req : pre_requets) {
             res_cmds.add(devStateToCommand(req));
         }
         return res_cmds;
     }
 
-    private Command devStateToCommand(DevNameDevStatusTuple req) {
+    private CommandPrototype devStateToCommand(DevNameDevStatusTuple req) {
         // TODO: add more mechanism for command priority.
-        return new Command(req.getDevName(),
+        return new CommandPrototype(req.getDevName(),
             getDeviceInfo(req.getDevName()),
             req.getDevStatus(),
             CommandPriority.MUST);
     }
+    */
 
     private List<DevNameDevStatusTuple> getPreReqPerDevState(
             DevNameDevStatusTuple target_dev_stat,
@@ -419,16 +449,19 @@ public class SystemParametersSingleton
 
     /**
      * @param routineName : name of the routine
-     * @return if routine present, return the routine. Otherwise return null.
+     * @return if the routine is found present, return a deep copy of the routine. Otherwise return null.
      */
-    public Routine getRoutine(String routineName)
-    {
+    public Routine getRoutine(String routineName) {
         Routine routine = this.routineNameRoutineDetailsMap.getOrDefault(routineName, null);
 
-        if(routine != null)
-            routine.refreshRoutine();
+        if (routine == null)
+        {
+            throw new IllegalArgumentException("Routine " + routineName + " not found in " + routineListJsonPath);
+        }
 
-        return routine;
+        Routine deepCopy = routine.getDeepCopy(); // Return a copy of the routine
+
+        return deepCopy; // Return the deep copy. Note that, the Routine manager need to create another deep copy
     }
 
     /**
@@ -471,15 +504,18 @@ public class SystemParametersSingleton
      *
      * @return Map of safety rules
      */
+    /*
     public Map<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> getSafetyRules()
     {
         return this.conditionVsRequiredActionsMap;
     }
+    */
 
     /**
      *
      * @return Return all the influenced dev states of a specific device state
      */
+    /*
     public Map<String, DeviceStatus> getConditionsOfOneDevStat(DevNameDevStatusTuple dev_stat) {
         Map<String, DeviceStatus> condition_list = new HashMap<>();
         for (Map.Entry<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> single_rule:
@@ -490,17 +526,20 @@ public class SystemParametersSingleton
         }
         return condition_list;
     }
+    */
 
 
     /**
      *
      * @return Map of safety rules related to a set of devices
      */
+    /*
     public Map<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> getSafetyRules(List<DevNameDevStatusTuple> devset)
     {
         // TODO (rui): This func is for optimization.
         return this.conditionVsRequiredActionsMap;
     }
+    */
 
 
     public static synchronized SystemParametersSingleton getInstance()

@@ -71,9 +71,9 @@ public class SafetyCheckerPerRoutine extends SafetyChecker
                             " with STATUS " + e_dev_state.getValue().toString());
                     // TODO: better decision if violated. (e.g. what if the status of behavior is OFF)
                     // Shut down the device.
-                    Command cmd = new Command(dev_name,
+                    CommandPrototype cmd = new CommandPrototype(dev_name,
                             SystemParametersSingleton.getInstance().getDeviceInfo(dev_name), DeviceStatus.OFF, CommandPriority.BEST_EFFORT);
-                    Routine shut_down_routine = new Routine("shut_down_by_safety_checker", Collections.singletonList(cmd));
+                    RoutinePrototype shut_down_routine = new RoutinePrototype("shut_down_by_safety_checker", Collections.singletonList(cmd));
                     System.out.println("Shut down routine: " + shut_down_routine);
                     // TODO: Need to update the rollback scheme here.
                     //       If set to null, will lead to null pointer failure in safety checker
@@ -87,7 +87,7 @@ public class SafetyCheckerPerRoutine extends SafetyChecker
     }
 
     @Override
-    public void doAwesomeSafetyChecking(Routine _routineToCheck)
+    public void doAwesomeSafetyChecking(RoutinePrototype _routineToCheck)
     {
         // TO RUI: this at this stage you need to resolve the concurrency controller
         // Feel free to use your own series of functions
@@ -141,12 +141,12 @@ public class SafetyCheckerPerRoutine extends SafetyChecker
                 _routineToCheck.commandList.get(index).beforeExecutionStatus = beforeExecutionStatus;
             }
 
-            Routine rollBackFormula = prepareRollbackFormula(_routineToCheck);
+            RoutinePrototype rollBackFormula = prepareRollbackFormula(_routineToCheck);
             this.sendMsgToDeviceManager(_routineToCheck, rollBackFormula); //submit to the next function
         }
         else
         {
-            _routineToCheck.executionResult = Routine.RoutineExecutionStatus.SAFETY_CHECK_FAILED;
+            _routineToCheck.executionResult = RoutinePrototype.RoutineExecutionStatus.SAFETY_CHECK_FAILED;
             this.sendMsgToConcurrencyController(_routineToCheck);
         }
     }
@@ -174,9 +174,9 @@ public class SafetyCheckerPerRoutine extends SafetyChecker
         return isSafe;
     }
 
-    private List<DevNameDevStatusTuple> getDevStatesFromRoutine(Routine routine) {
+    private List<DevNameDevStatusTuple> getDevStatesFromRoutine(RoutinePrototype routine) {
         final List<DevNameDevStatusTuple> devstats = new ArrayList<>();
-        for (final Command cmd: routine.commandList) {
+        for (final CommandPrototype cmd: routine.commandList) {
             devstats.add(new DevNameDevStatusTuple(cmd.devName, cmd.targetStatus));
         }
         return devstats;
@@ -185,7 +185,7 @@ public class SafetyCheckerPerRoutine extends SafetyChecker
 
 
     @Override
-    public void receiveMsgFromConcurrencyController(Routine _routine)
+    public void receiveMsgFromConcurrencyController(RoutinePrototype _routine)
     {
         //MSG from upper layer
 
@@ -197,16 +197,16 @@ public class SafetyCheckerPerRoutine extends SafetyChecker
     public synchronized void receiveMsgFromDeviceManager(EventSftyCkrDevMngrMsg _eventSftyCkrDevMngrMsg)
     {
         //MSG from lower layer
-        Routine.RoutineExecutionStatus routineExecutionStatus = Routine.RoutineExecutionStatus.SUCCESSFUL;
+        RoutinePrototype.RoutineExecutionStatus routineExecutionStatus = RoutinePrototype.RoutineExecutionStatus.SUCCESSFUL;
         if( _eventSftyCkrDevMngrMsg.isFailed())
         {
-            routineExecutionStatus = Routine.RoutineExecutionStatus.EXECUTION_FAILED;
+            routineExecutionStatus = RoutinePrototype.RoutineExecutionStatus.EXECUTION_FAILED;
         }
 
         _eventSftyCkrDevMngrMsg.routine.executionResult = routineExecutionStatus;
         // Update the status map inside safety checker.
-        Routine done_routine = _eventSftyCkrDevMngrMsg.routine;
-        for (final Command cmd: done_routine.commandList) {
+        RoutinePrototype done_routine = _eventSftyCkrDevMngrMsg.routine;
+        for (final CommandPrototype cmd: done_routine.commandList) {
             this.devNameStatusMap.put(cmd.devName, cmd.afterExecutionStatus);
         }
         this.sendMsgToConcurrencyController(_eventSftyCkrDevMngrMsg.routine);
@@ -214,7 +214,7 @@ public class SafetyCheckerPerRoutine extends SafetyChecker
 
 
     @Override
-    public Routine prepareRollbackFormula(Routine _checkedRoutine)
+    public RoutinePrototype prepareRollbackFormula(RoutinePrototype _checkedRoutine)
     {
         // RUI: for per command, maybe we need to do something else...
         // In per command, to prepare the rollback, we need the previous commands
@@ -222,7 +222,7 @@ public class SafetyCheckerPerRoutine extends SafetyChecker
         // May be you need to explicitly write code for it
         // For this reason I am keeping this function.
 
-        Routine rollBackFormula = _checkedRoutine.getRollBackRoutine();
+        RoutinePrototype rollBackFormula = _checkedRoutine.getRollBackRoutine();
 
         return rollBackFormula;
     }

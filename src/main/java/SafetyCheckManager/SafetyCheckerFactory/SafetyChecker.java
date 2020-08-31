@@ -5,7 +5,7 @@ import EventBusManager.Events.EventConCtrlSftyCkrMsg;
 import EventBusManager.Events.EventSftyCkrDevMngrMsg;
 import EventBusManager.Events.EventDeviceStatusChange;
 import Utility.DeviceStatus;
-import Utility.Routine;
+import Utility.RoutinePrototype;
 import Utility.SafetyCheckerType;
 import com.google.common.eventbus.Subscribe;
 
@@ -33,23 +33,23 @@ public abstract class SafetyChecker
         EventBusSingleton.getInstance().getEventBus().register(this); //Register to EventBus
     }
 
-    public abstract void doAwesomeSafetyChecking(Routine _routineToCheck);
-    public abstract Routine prepareRollbackFormula(Routine _checkedRoutine);
+    public abstract void doAwesomeSafetyChecking(RoutinePrototype _routineToCheck);
+    public abstract RoutinePrototype prepareRollbackFormula(RoutinePrototype _checkedRoutine);
 
     public abstract void eventHandler_DeviceStatusChange(Map<String, DeviceStatus> devNameStatusMap);
 
     /////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////_SEND/RECEIVE_MSG_///////////////////////////////////////////
 
-    public abstract void receiveMsgFromConcurrencyController(Routine _routine);
-    public void sendMsgToConcurrencyController(Routine _routine)
+    public abstract void receiveMsgFromConcurrencyController(RoutinePrototype _routine);
+    public void sendMsgToConcurrencyController(RoutinePrototype _routine)
     {//send MSG to upper layer
-        assert(_routine.executionResult != Routine.RoutineExecutionStatus.NOT_ASSIGNED_YET); // By this time routine should have a status!
+        assert(_routine.executionResult != RoutinePrototype.RoutineExecutionStatus.NOT_ASSIGNED_YET); // By this time routine should have a status!
         EventBusSingleton.getInstance().getEventBus().post(new EventConCtrlSftyCkrMsg(false, _routine)); // post to EventBus
     }
 
     public abstract void receiveMsgFromDeviceManager(EventSftyCkrDevMngrMsg _eventSftyCkrDevMngrMsg);
-    public void sendMsgToDeviceManager(Routine _checkedRoutine, Routine _rollBackFormula)
+    public void sendMsgToDeviceManager(RoutinePrototype _checkedRoutine, RoutinePrototype _rollBackFormula)
     {//send MSG to lower layer
         assert(_checkedRoutine.uniqueRoutineID == _rollBackFormula.uniqueRoutineID);
 

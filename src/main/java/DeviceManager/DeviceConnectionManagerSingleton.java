@@ -3,7 +3,7 @@ package DeviceManager;
 import DeviceManager.DeviceDrivers.DeviceFactory.DeviceConnector;
 import DeviceManager.DeviceDrivers.DeviceFactory.DeviceConnectorFactory;
 import EventBusManager.EventBusSingleton;
-import EventBusManager.Events.EventSftyCkrDevMngrMsg;
+import EventBusManager.Events.EventConCtrlDevMngrMsg;
 import EventBusManager.Events.EventDeviceStatusChange;
 import EventBusManager.Events.EventRegisterRemoveStateChangeDevices;
 import Utility.*;
@@ -25,6 +25,48 @@ import java.util.concurrent.TimeUnit;
  */
 public class DeviceConnectionManagerSingleton
 {
+    private class ParallelExecutor implements  Runnable {
+
+        DeviceConnectionManagerSingleton parentClass;
+        Routine routine;
+        public ParallelExecutor(DeviceConnectionManagerSingleton _parentClass, Routine _routine)
+        {
+            this.parentClass = _parentClass;
+            this.routine = _routine;
+
+        }
+
+        public void run() {
+            List<RoutineExecutionRecipe> executionRecipeList = this.routine.getRoutineExecuteRecipe();
+
+            for(int I = 0 ; I < executionRecipeList.size() ; I++)
+            {
+                RoutineExecutionRecipe recipe = executionRecipeList.get(I);
+
+                if(0 < recipe.sleepMilliSecBeforeExecutingCmd)
+                {
+                    try
+                    {
+                        Thread.sleep(recipe.sleepMilliSecBeforeExecutingCmd);
+                    }
+                    catch(InterruptedException ex)
+                    {
+                        System.out.println(ex.toString());
+                        System.exit(1);
+                    }
+                }
+
+                DeviceInfo devInfo = recipe.deviceInfo;
+                DeviceStatus targetStatus = recipe.targetStatus;
+                DeviceStatus afterExecutionStatus = this.parentClass.executeCommand(devInfo, targetStatus, false); // Execute the command
+                //System.out.println("\t\t ++++++++++++++++++++++++++++  devName = " + devInfo.getDevName() + " | TargetStatus = " + targetStatus.name() + " afterEx =  " + afterExecutionStatus.name() );
+                System.out.println("\t\t\t ####-subCmd " + recipe);
+            }
+
+            this.parentClass.sendMsgToConCtrl(routine);
+        }
+    }
+
     private class DeviceTracker
     {
         public DeviceConnector deviceConnector;
@@ -177,18 +219,16 @@ public class DeviceConnectionManagerSingleton
         return currentStatus;
     }
 
-    private synchronized void executeRoutine(Routine routine, Routine rollBackFormula)
+    private synchronized void executeRoutine(Routine routine)
     {
-        for(Command command : routine.commandList)
-        {
-            //This field should be filled up by the Safety checker.
-            //This information will be used during rollback.
-            assert(command.beforeExecutionStatus != DeviceStatus.COMMAND_NOT_EXECUTED_YET);
-            assert(command.afterExecutionStatus == DeviceStatus.COMMAND_NOT_EXECUTED_YET);
-        }
+        System.out.println("\t\t ####-T Creating Thread For Rtn " + routine.uniqueRoutineID);
 
-        System.out.println("Lower Layer: " + routine);
+        ParallelExecutor parallelExecutor = new ParallelExecutor(this, routine);
 
+        Thread thread = new Thread(parallelExecutor);
+        thread.start();
+
+        /*
         for(int index = 0; index < routine.commandList.size() ; ++index)
         {//If a MUST command fails, stop execution. For BestEffort -> don't care
 
@@ -196,69 +236,32 @@ public class DeviceConnectionManagerSingleton
             DeviceInfo devInfo = routine.commandList.get(index).deviceInfo;
 
             DeviceStatus afterExecutionStatus = this.executeCommand(devInfo, targetStatus, false); // Execute the command
-            routine.commandList.get(index).afterExecutionStatus = afterExecutionStatus; //Update the execution result
 
             System.out.println("\t\t devName = " + devInfo.getDevName() + " | TargetStatus = " + targetStatus.name() + " afterEx =  " + afterExecutionStatus.name() );
-
-            if( afterExecutionStatus != targetStatus)
-            {// If cannot set the device's status
-
-                if(CommandPriority.MUST == routine.commandList.get(index).commandPriority)
-                {
-                    int rollBackIndex = index;
-
-                    if(1 == routine.commandList.size())
-                    {
-                        // Is it a per-command or Per routine?
-                        // If per-command, then size of the commandList will be 1
-                        // To avoid confusion, if routine.commandList.size() == 1, then
-                        // start rollback from furthest side of the rollback.command list.
-                        // It will cover both per-routine check (if there is only a single command)
-                        // and per-command check (only a single command C_n and rollback of (C_0 to C_n)
-
-                        rollBackIndex = rollBackFormula.commandList.size() - 1;
-                    }
-                    System.out.println(" \t\t      rollBackIndex = " + rollBackIndex);
-
-                    for(; 0 <= rollBackIndex; --rollBackIndex)
-                    {
-                        DeviceStatus rollBackStatus = rollBackFormula.commandList.get(rollBackIndex).targetStatus;
-                        DeviceInfo rollBackDevInfo = rollBackFormula.commandList.get(rollBackIndex).deviceInfo;
-                        afterExecutionStatus = this.executeCommand(rollBackDevInfo, rollBackStatus, false); //Try to rollback to its previous stage
-                        rollBackFormula.commandList.get(rollBackIndex).afterExecutionStatus = afterExecutionStatus; //Update the current "after execution status"
-                    }
-
-                    System.out.println(" \t\t      afterRollBack " + rollBackFormula );
-
-                    break; //cancel further execution
-
-                }
-                else
-                {
-                    //SBA: BEST_EFFORT command failed. For now we dont care about the best_effort command
-                }
-            }
         }
 
-        this.sendMsgToSafetyChecker(routine, rollBackFormula);
+        this.sendMsgToConCtrl(routine);
+
+        */
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////_SEND/RECEIVE_MSG_///////////////////////////////////////////
-    public void sendMsgToSafetyChecker(Routine executedRoutine, Routine executedRollBackFormula)
+    public void sendMsgToConCtrl(Routine executedRoutine)
     {//send MSG to upper layer
 
-        EventSftyCkrDevMngrMsg executionResult = new EventSftyCkrDevMngrMsg(
+        EventConCtrlDevMngrMsg executionResult = new EventConCtrlDevMngrMsg(
                 false,
-                executedRoutine,
-                executedRollBackFormula);
+                executedRoutine);
 
         EventBusSingleton.getInstance().getEventBus().post(executionResult);
     }
 
-    private void receiveMsgFromSafetyChecker(Routine routine, Routine rollBackFormula)
+    private void receiveMsgFromConCtrl(Routine routine)
     {//
-        this.executeRoutine(routine, rollBackFormula);
+        System.out.println("\t ####-Rtn -t:" + System.currentTimeMillis() + " | RoutineID:" + routine.uniqueRoutineID + " | " +
+                routine);
+        this.executeRoutine(routine);
     }
     ////////////////////////////////_SEND/RECEIVE_MSG_///////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////////////
@@ -267,13 +270,13 @@ public class DeviceConnectionManagerSingleton
     /////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////_INCOMING_EVENTS_////////////////////////////////////////////
     @Subscribe
-    public void EventCheckerDeviceMsg(EventSftyCkrDevMngrMsg _eventSftyCkrDevMngrMsg)
+    public void EventCheckerDeviceMsg(EventConCtrlDevMngrMsg _eventConCtrlDevMngrMsg)
     {
         // Event from Upper layer
 
-        if(_eventSftyCkrDevMngrMsg.isFromCheckerToDevice)
+        if(_eventConCtrlDevMngrMsg.isFromConCtlToDevMngr)
         {
-            this.receiveMsgFromSafetyChecker(_eventSftyCkrDevMngrMsg.routine, _eventSftyCkrDevMngrMsg.rollBackFormula);
+            this.receiveMsgFromConCtrl(_eventConCtrlDevMngrMsg.routine);
         }
     }
 

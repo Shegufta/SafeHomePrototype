@@ -1,11 +1,6 @@
-import DeviceManager.DeviceConnectionManagerSingleton;
 import EventBusManager.Events.EventRegisterRemoveStateChangeDevices;
 import SafeHomeManager.SafeHomeManager;
 import Utility.*;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 
 /**
@@ -16,6 +11,10 @@ import java.util.List;
  */
 public class Main
 {
+    public static Routine getRoutine(String routineName)
+    {
+        return SystemParametersSingleton.getInstance().getRoutine(routineName);
+    }
 
     public static void main(String [ ] args) throws InterruptedException
     {
@@ -25,27 +24,44 @@ public class Main
         SafeHomeManager safeHomeManager = new SafeHomeManager();
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        Routine turn_off_bedroomLight = SystemParametersSingleton.getInstance().getRoutine("turn_off_bedroomLight");
-        System.out.println("Turn Off Bedroom Light....");
-        safeHomeManager.sendMsgToRoutineManager(turn_off_bedroomLight);
-
-        System.out.println("sleep for 6 second");
-        Thread.sleep(6000);
-        System.out.println("wakeup");
-
-
-        Routine turn_on_bedroomLight = SystemParametersSingleton.getInstance().getRoutine("turn_on_bedroomLight");
+        Routine turn_on_bedroomLight = getRoutine("turn_on_bedroomLight");
         System.out.println("Turn on Bedroom Light....");
         safeHomeManager.sendMsgToRoutineManager(turn_on_bedroomLight);
 
-        System.out.println("sleep for 6 second");
-        Thread.sleep(6000);
+        //System.out.println("sleep for 6 second");
+        //Thread.sleep(6000);
+        //System.out.println("wakeup");
+
+        Thread.sleep(1000);
+
+
+        Routine turn_on_air_freshener = getRoutine("turn_on_air_freshener");
+        System.out.println("Turn on air freshener....");
+        safeHomeManager.sendMsgToRoutineManager(turn_on_air_freshener);
+
+        //System.out.println("sleep for 6 second");
+        //Thread.sleep(6000);
+        //System.out.println("wakeup");
+
+        Thread.sleep(1000);
+
+        Routine bedroomRoutine2 = getRoutine("bedroomRoutine2");
+        System.out.println("Turn on air freshener and bedroom light");
+        safeHomeManager.sendMsgToRoutineManager(bedroomRoutine2);
+
+
+        System.out.println("sleep for 10 second");
+        Thread.sleep(10000);
         System.out.println("wakeup");
         ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        Routine turn_on_oven = SystemParametersSingleton.getInstance().getRoutine("turn_on_oven");
-        Routine theater_mode = SystemParametersSingleton.getInstance().getRoutine("theater_mode");
-        Routine open_window = SystemParametersSingleton.getInstance().getRoutine("open_window");
+        Routine turn_on_oven = getRoutine("turn_on_oven");
+        Routine theater_mode = getRoutine("theater_mode");
+        Routine open_window = getRoutine("open_window");
+
+        System.out.println("--------------------------------------------------------------------------------------");
+        //turn_on_oven = getRoutine("turn_on_oven");
+        safeHomeManager.sendMsgToRoutineManager(turn_on_oven);
 
 //        System.out.println("Turn on Fire Alarm & Exhaust Fan!");
 //        safeHomeManager.turnOnOffUnplugDevice("exhaust_fan", EventRegisterRemoveStateChangeDevices.DeviceEventType.TURN_ON);
@@ -76,13 +92,8 @@ public class Main
         safeHomeManager.turnOnOffUnplugDevice("fire_alarm", EventRegisterRemoveStateChangeDevices.DeviceEventType.UNPLUG);
         Thread.sleep(6000);
 
-        System.out.println("Turn On oven AGAIN!....");
-        System.out.println("TO RUI: KNOWN ISSUE: never use same routine twice... it will crash the code");
-        System.out.println("I have detected the bug, I will fix it later");
-        System.out.println("For example, if you want to call the routine turn_on_oven again, create a new instance");
-        System.out.println("Below you will get an example of how to use the same routine twice (this is temporary, I will fix it soon)");
 
-        turn_on_oven = SystemParametersSingleton.getInstance().getRoutine("turn_on_oven");
+        turn_on_oven = getRoutine("turn_on_oven");
         safeHomeManager.sendMsgToRoutineManager(turn_on_oven);
 
 

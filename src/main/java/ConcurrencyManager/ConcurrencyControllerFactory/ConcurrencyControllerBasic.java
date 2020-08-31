@@ -1,11 +1,11 @@
 package ConcurrencyManager.ConcurrencyControllerFactory;
 
 
-import EventBusManager.EventBusSingleton;
-import EventBusManager.Events.EventConCtrlSftyCkrMsg;
-import EventBusManager.Events.EventRtnMgrConCtrlMsg;
+import Utility.CONSISTENCY_TYPE;
 import Utility.ConcurrencyControllerType;
 import Utility.Routine;
+
+import java.util.List;
 
 /**
  * @author Shegufta Ahsan
@@ -17,9 +17,12 @@ public class ConcurrencyControllerBasic extends ConcurrencyController
 {
     private Boolean isDisposed;
 
-    public ConcurrencyControllerBasic(ConcurrencyControllerType _controllerType)
+    public ConcurrencyControllerBasic(ConcurrencyControllerType _controllerType,
+                                      List<String> _devIDlist,
+                                      CONSISTENCY_TYPE _consistencyType,
+                                      long _safeHomeStartTime)
     {
-        super(_controllerType);
+        super(_controllerType, _devIDlist, _consistencyType, _safeHomeStartTime);
         assert(ConcurrencyControllerType.BASIC == _controllerType);
         this.isDisposed = false;
     }
@@ -29,7 +32,9 @@ public class ConcurrencyControllerBasic extends ConcurrencyController
         // TO RUI: this at this stage you need to resolve the concurrency controller
         // Feel free to use your own series of functions
         // this one is just a dummy function!
-        this.sendMsgToSafetyChecker(_routine);
+
+        this.lockTable.register(_routine);
+        this.sendMsgToDevMngr(_routine);
     }
 
 
@@ -40,7 +45,7 @@ public class ConcurrencyControllerBasic extends ConcurrencyController
     }
 
     @Override
-    public void receiveMsgFromSafetyChecker(Routine _routine)
+    public void receiveMsgFromDevMngr(Routine _routine)
     {//MSG from lower layer
         this.sendMsgToRoutingManager(_routine);
     }

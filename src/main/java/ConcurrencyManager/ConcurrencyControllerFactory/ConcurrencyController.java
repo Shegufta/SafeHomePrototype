@@ -1,11 +1,16 @@
 package ConcurrencyManager.ConcurrencyControllerFactory;
 
 import EventBusManager.EventBusSingleton;
+import EventBusManager.Events.EventConCtrlDevMngrMsg;
 import EventBusManager.Events.EventConCtrlSftyCkrMsg;
 import EventBusManager.Events.EventRtnMgrConCtrlMsg;
+import Utility.CONSISTENCY_TYPE;
 import Utility.ConcurrencyControllerType;
+import Utility.LockTable;
 import Utility.Routine;
 import com.google.common.eventbus.Subscribe;
+
+import java.util.List;
 
 /**
  * @author Shegufta Ahsan
@@ -17,11 +22,16 @@ public abstract class ConcurrencyController
 {
     public ConcurrencyControllerType concurrencyControllerType;
     public Boolean isDisposed;
+    protected LockTable lockTable;
 
-    public ConcurrencyController(ConcurrencyControllerType _concurrencyControllerType)
+    public ConcurrencyController(ConcurrencyControllerType _concurrencyControllerType,
+                                 List<String> _devIDlist,
+                                 CONSISTENCY_TYPE _consistencyType,
+                                 long _safeHomeStartTime)
     {
         this.concurrencyControllerType = _concurrencyControllerType;
         this.isDisposed = false;
+        this.lockTable = new LockTable(_devIDlist, _consistencyType, _safeHomeStartTime);
         EventBusSingleton.getInstance().getEventBus().register(this); //Register to EventBus
     }
 
@@ -37,10 +47,10 @@ public abstract class ConcurrencyController
     }
 
 
-    public abstract void receiveMsgFromSafetyChecker(Routine _routine);
-    public void sendMsgToSafetyChecker(Routine _routine)
+    public abstract void receiveMsgFromDevMngr(Routine _routine);
+    public void sendMsgToDevMngr(Routine _routine)
     {//send MSG to lower layer
-        EventBusSingleton.getInstance().getEventBus().post(new EventConCtrlSftyCkrMsg(true, _routine));
+        EventBusSingleton.getInstance().getEventBus().post(new EventConCtrlDevMngrMsg(true, _routine));
     }
 
     ////////////////////////////////_SEND/RECEIVE_MSG_///////////////////////////////////////////
@@ -59,11 +69,11 @@ public abstract class ConcurrencyController
     }
 
     @Subscribe
-    public synchronized void EventConCtlrSftyCkrMsg(EventConCtrlSftyCkrMsg _eventConCtlrSftyCkrMsg)
+    public synchronized void EventConCtlrSftyCkrMsg(EventConCtrlDevMngrMsg _eventConCtrlDevMngrMsg)
     {//Event from lower layer
-        if(!_eventConCtlrSftyCkrMsg.isFromConCtlToSftyCkr)
+        if(!_eventConCtrlDevMngrMsg.isFromConCtlToDevMngr)
         {
-            this.receiveMsgFromSafetyChecker(_eventConCtlrSftyCkrMsg.routine);
+            this.receiveMsgFromDevMngr(_eventConCtrlDevMngrMsg.routine);
         }
     }
     ////////////////////////////////_INCOMING_EVENTS_////////////////////////////////////////////

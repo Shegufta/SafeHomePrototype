@@ -5,14 +5,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Map;
 
-
-
+/**
+ * @author Shegufta Ahsan
+ * @project SafeHomeFramework
+ * @date 18-Jul-19
+ * @time 12:03 AM
+ */
 public class Command
 {
-    //public List<DeviceInfo> deviceInfoList;   //SBA: for now lets assume a command contains only a single device.
-                                                //i.e. for the first version, lets forget about the commands such as "Turn On All Lights"
-                                                //In an alternate design, such commands might be converted into a routine by the RoutineHandler.
-                                                //I think, that will create a simple design.
     @JsonProperty
     public String devName;
 
@@ -22,74 +22,47 @@ public class Command
     @JsonProperty
     public CommandPriority commandPriority;
 
+    @JsonProperty
+    public int durationMilliSec;
+
+    @JsonProperty
+    public DeviceStatus endStatus;
 
 
     @JsonIgnore
     public DeviceInfo deviceInfo;
 
     @JsonIgnore
-    public DeviceStatus beforeExecutionStatus;
+    final public String NOT_INITIALIZED_YET = "not_initialized_yet";
 
     @JsonIgnore
-    public DeviceStatus afterExecutionStatus;
+    final public int NOT_INITIALIZED_INT = -1;
+
+
+    @JsonIgnore
+    public long startTime;
 
     @JsonIgnore
     public Boolean isDisposed;
 
-    public Command() // pass the rest 3 attribute through JSON
+    public Command()
     {
+        this.devName = NOT_INITIALIZED_YET;
+        this.commandPriority = CommandPriority.UNKNOWN;
         this.deviceInfo = null;
-        this.beforeExecutionStatus = DeviceStatus.COMMAND_NOT_EXECUTED_YET;
-        this.afterExecutionStatus = DeviceStatus.COMMAND_NOT_EXECUTED_YET;
         this.isDisposed = false;
-    }// need this default constructor for JSON parsing
+        this.startTime = NOT_INITIALIZED_INT;
+        this.durationMilliSec = NOT_INITIALIZED_INT;
+    }//// need this default constructor for JSON parsing
 
     @JsonIgnore
-    public Command(String _devName, DeviceInfo _deviceInfo, DeviceStatus _targetStatus, CommandPriority _commandPriority)
+    public Command(String _devName, CommandPriority _commandPriority, DeviceStatus _targetStatus, int _duration, DeviceStatus _endStatus)
     {
         this.devName = _devName;
-        this.deviceInfo = _deviceInfo;
-        this.targetStatus = _targetStatus;
         this.commandPriority = _commandPriority;
-
-        this.beforeExecutionStatus = DeviceStatus.COMMAND_NOT_EXECUTED_YET;
-        this.afterExecutionStatus = DeviceStatus.COMMAND_NOT_EXECUTED_YET;
-        this.isDisposed = false;
-    }
-
-    @JsonIgnore
-    public void refreshCommand()
-    {
-        this.beforeExecutionStatus = DeviceStatus.COMMAND_NOT_EXECUTED_YET;
-        this.afterExecutionStatus = DeviceStatus.COMMAND_NOT_EXECUTED_YET;
-    }
-
-
-    @Override
-    public String toString()
-    {
-        return "Command{" +
-                "devName='" + devName + '\'' +
-                ", deviceInfo=" + deviceInfo +
-                ", commandPriority=" + commandPriority +
-                ", beforeExecutionStatus=" + beforeExecutionStatus +
-                ", targetStatus=" + targetStatus +
-                ", afterExecutionStatus=" + afterExecutionStatus +
-                '}';
-    }
-
-
-    @JsonIgnore
-    public Command getRollBackCommand()
-    {
-        assert(this.beforeExecutionStatus != DeviceStatus.COMMAND_NOT_EXECUTED_YET); //Cannot Rollback if you dont know the previous state!
-        assert(this.deviceInfo != null);
-        assert(0 == this.deviceInfo.getDevName().compareTo(this.devName));
-
-        Command rollBackCommand = new Command(this.devName, this.deviceInfo, this.beforeExecutionStatus, CommandPriority.BEST_EFFORT); // Rollback should be best effort
-        rollBackCommand.beforeExecutionStatus = rollBackCommand.targetStatus;
-
-        return rollBackCommand;
+        this.targetStatus = _targetStatus;
+        this.durationMilliSec = _duration;
+        this.endStatus = _endStatus;
     }
 
     @JsonIgnore
@@ -103,6 +76,76 @@ public class Command
         }
 
         this.deviceInfo = _devNameDevInfoMap.get(this.devName);
+    }
+
+    @JsonIgnore
+    public boolean isMust()
+    {
+        return (this.commandPriority == CommandPriority.MUST);
+    }
+
+    @JsonIgnore
+    public long getCmdEndTime()
+    {
+        return this.startTime + this.durationMilliSec;
+    }
+
+    @JsonIgnore
+    public boolean isCmdOverlapsWithWatchTime(int queryTime)
+    {
+        boolean insideBound = false;
+
+        if(this.startTime <= queryTime && queryTime < getCmdEndTime())
+        { // NOTE: the start time is inclusive, whereas the end time is exclusive. e.g.   [3,7)
+            insideBound = true;
+        }
+
+        return insideBound;
+    }
+
+    @JsonIgnore
+    public int compareTimeline(int queryTime)
+    {
+        if(this.getCmdEndTime() <= queryTime)
+            return -1; //  Cmd ends before query
+
+        if(this.startTime <= queryTime && queryTime < getCmdEndTime())
+            return 0; // cmd overlaps
+
+        return 1; // cmd starts after query
+    }
+
+    @JsonIgnore
+    public Command getDeepCopy()
+    {
+        Command deepCopyCommand = new Command(
+                this.devName,
+                this.commandPriority,
+                this.targetStatus,
+                this.durationMilliSec,
+                this.endStatus);
+
+        deepCopyCommand.startTime = this.startTime;
+        deepCopyCommand.isDisposed = this.isDisposed;
+        deepCopyCommand.deviceInfo = this.deviceInfo;
+        return deepCopyCommand;
+    }
+
+
+
+    @Override
+    public String toString()
+    {
+        return "Command{" +
+                "devName='" + devName + '\'' +
+                ",startTime=" + startTime +
+                ",endTime=" + startTime + durationMilliSec +
+                ", deviceInfo=" + deviceInfo +
+                ", commandPriority=" + commandPriority +
+                ", targetStatus=" + targetStatus +
+                ", durationMilliSec=" + durationMilliSec +
+                ", endStatus=" + endStatus +
+                '}';
     }
 
     @JsonIgnore

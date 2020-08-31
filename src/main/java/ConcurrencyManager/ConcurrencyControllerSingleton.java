@@ -3,7 +3,10 @@ package ConcurrencyManager;
 import ConcurrencyManager.ConcurrencyControllerFactory.ConcurrencyController;
 import ConcurrencyManager.ConcurrencyControllerFactory.ConcurrencyControllerFactory;
 import EventBusManager.EventBusSingleton;
+import Utility.CONSISTENCY_TYPE;
 import Utility.ConcurrencyControllerType;
+
+import java.util.List;
 
 /**
  * @author Shegufta Ahsan
@@ -17,18 +20,30 @@ public class ConcurrencyControllerSingleton
     private Boolean isDisposed;
     private ConcurrencyController concurrencyController;
 
-    private ConcurrencyControllerSingleton(ConcurrencyControllerType _concurrencyControllerType)
+    private ConcurrencyControllerSingleton(ConcurrencyControllerType _concurrencyControllerType,
+                                           List<String> _devIDlist,
+                                           CONSISTENCY_TYPE _consistencyType,
+                                           long _safeHomeStartTime)
     {
         this.isDisposed = false;
-        this.concurrencyController = ConcurrencyControllerFactory.createConcurrencyController(_concurrencyControllerType);
+        this.concurrencyController = ConcurrencyControllerFactory.createConcurrencyController(_concurrencyControllerType,
+                _devIDlist,
+                _consistencyType,
+                _safeHomeStartTime);
         EventBusSingleton.getInstance().getEventBus().register(this); // register to event bus
     }
 
-    public static synchronized ConcurrencyControllerSingleton getInstance(ConcurrencyControllerType _controllerType)
+    public static synchronized ConcurrencyControllerSingleton getInstance(ConcurrencyControllerType _controllerType,
+                                                                          List<String> _devIDlist,
+                                                                          CONSISTENCY_TYPE _consistencyType,
+                                                                          long _safeHomeStartTime)
     {
         if(null == ConcurrencyControllerSingleton.singleton)
         {
-            ConcurrencyControllerSingleton.singleton = new ConcurrencyControllerSingleton(_controllerType);
+            ConcurrencyControllerSingleton.singleton = new ConcurrencyControllerSingleton(_controllerType,
+                    _devIDlist,
+                    _consistencyType,
+                    _safeHomeStartTime);
         }
 
         if(ConcurrencyControllerSingleton.singleton.isDisposed)

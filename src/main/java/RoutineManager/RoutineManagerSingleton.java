@@ -56,11 +56,18 @@ public class RoutineManagerSingleton
     /////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////_SEND/RECEIVE_MSG_///////////////////////////////////////////
 
-    private void receiveMsgFromSafeHomeManager(Routine _routine)
+    private void receiveMsgFromSafeHomeManager(final Routine _routine)
     {
-        //TODO: add to map
-        _routine.uniqueRoutineID = getUniqueRoutineID();
-        this.routineIDroutineMgrMap.put(_routine.uniqueRoutineID, new RoutineHandler(_routine));
+        assert(_routine.isCmmandListINITIALIZED == false);
+
+        Routine copiedRoutine = _routine.getDeepCopy(); // Create a Deep copy
+
+        // Register the routine
+        copiedRoutine.initializeCommandList();
+        copiedRoutine.uniqueRoutineID = getUniqueRoutineID();
+        copiedRoutine.registrationTime = System.currentTimeMillis();
+
+        this.routineIDroutineMgrMap.put(copiedRoutine.uniqueRoutineID, new RoutineHandler(copiedRoutine));
     }
 
     public void sendMsgToSafeHomeManager(Routine _routine)

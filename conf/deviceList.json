@@ -11,5 +11,7 @@
   {"devName":"coffee_maker","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
   {"devName":"burner","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
   {"devName":"smart_plug","devType":"TPLINK_HS110","ipAddr":"192.168.0.44","port":1234,"isPersistentTCP":true},
-  {"devName":"bedroom_light","devType":"TPLINK_HS110","ipAddr":"192.168.0.52","port":1234,"isPersistentTCP":true}
+  {"devName":"bedroom_light","devType":"TPLINK_HS110","ipAddr":"192.168.0.52","port":1234,"isPersistentTCP":true},
+  {"devName":"air_freshener","devType":"TPLINK_HS110","ipAddr":"192.168.0.50","port":1234,"isPersistentTCP":true},
+  {"devName":"dining_light","devType":"TPLINK_HS110","ipAddr":"192.168.0.51","port":1234,"isPersistentTCP":true}
 ]

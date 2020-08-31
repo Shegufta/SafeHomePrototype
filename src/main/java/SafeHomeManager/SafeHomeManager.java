@@ -3,11 +3,9 @@ package SafeHomeManager;
 import ConcurrencyManager.ConcurrencyControllerSingleton;
 import DeviceManager.DeviceConnectionManagerSingleton;
 import EventBusManager.EventBusSingleton;
-import EventBusManager.Events.EventConCtrlSftyCkrMsg;
 import EventBusManager.Events.EventRegisterRemoveStateChangeDevices;
 import EventBusManager.Events.EventSfHmRtnMgrMsg;
 import RoutineManager.RoutineManagerSingleton;
-import SafetyCheckManager.SafetyCheckerSingleton;
 import Utility.*;
 import com.google.common.eventbus.Subscribe;
 
@@ -23,20 +21,16 @@ public class SafeHomeManager
 {
     RoutineManagerSingleton routineManagerSingleton;
     ConcurrencyControllerSingleton concurrencyControllerSingleton;
-    SafetyCheckerSingleton safetyCheckerSingleton;
     DeviceConnectionManagerSingleton deviceConnectionManagerSingleton;
 
     Thread shutdownHook;
-    public void tempFunction_Test_Safety(List<Command> cmdList)
-    {
-        Routine routine = new Routine("myRoutine", cmdList);
-        routine.uniqueRoutineID = 1;
-        EventConCtrlSftyCkrMsg eventConCtlrSftyCkrMsg = new EventConCtrlSftyCkrMsg(true, routine);
-        EventBusSingleton.getInstance().getEventBus().post(eventConCtlrSftyCkrMsg);
-    }
+
+    public long SAFE_HOME_START_TIME;
 
     public SafeHomeManager() throws InterruptedException
     {
+
+        this.SAFE_HOME_START_TIME = System.currentTimeMillis();
         this.shutdownHook = new Thread(this::Dispose, "SafeHomeManager - shutdown hook");
         Runtime.getRuntime().addShutdownHook(this.shutdownHook); // SBA: BestEffort graceful shutdown
 
@@ -44,8 +38,10 @@ public class SafeHomeManager
         ////////////////////////////////////////////////////////////////////////////////////////
         System.out.println("Initiating Components");
         this.routineManagerSingleton = RoutineManagerSingleton.getInstance();
-        this.concurrencyControllerSingleton = ConcurrencyControllerSingleton.getInstance(ConcurrencyControllerType.BASIC);
-        this.safetyCheckerSingleton = SafetyCheckerSingleton.getInstance(SafetyCheckerType.PER_ROUTINE);
+        this.concurrencyControllerSingleton = ConcurrencyControllerSingleton.getInstance(ConcurrencyControllerType.BASIC,
+                SystemParametersSingleton.getInstance().devIDList,
+                SystemParametersSingleton.getInstance().consistencyType,
+                SAFE_HOME_START_TIME);
         this.deviceConnectionManagerSingleton = DeviceConnectionManagerSingleton.getInstance();
         System.out.println("\t\t DONE...");
         ////////////////////////////////////////////////////////////////////////////////////////
@@ -128,7 +124,6 @@ public class SafeHomeManager
         System.out.println("Disposing SafeHomeManager");
         routineManagerSingleton.Dispose();
         concurrencyControllerSingleton.Dispose();
-        safetyCheckerSingleton.Dispose();
         deviceConnectionManagerSingleton.Dispose();
 
         EventBusSingleton.getInstance().Dispose(); // SBA: WARNING: always Dispose it last. Otherwise it might break other not-Disposed-yet components
