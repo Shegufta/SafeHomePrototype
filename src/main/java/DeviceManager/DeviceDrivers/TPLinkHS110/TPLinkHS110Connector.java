@@ -56,7 +56,9 @@ public class TPLinkHS110Connector extends DeviceConnector
         }
         catch (IOException ioEx)
         {
+            System.out.println("\n\n-----------------NO-CONNECTION-----------------------");
             System.out.println("Inside TPLinkHS110Connector::turnON() " + ioEx );
+            System.out.println("---------------------------------------------------------\n");
             return DeviceStatus.TIMEOUT;
         }
     }
@@ -80,7 +82,9 @@ public class TPLinkHS110Connector extends DeviceConnector
         }
         catch (IOException ioEx)
         {
+            System.out.println("\n\n-----------------NO-CONNECTION-----------------------");
             System.out.println("Inside TPLinkHS110Connector::turnOFF() " + ioEx );
+            System.out.println("---------------------------------------------------------\n");
             return DeviceStatus.TIMEOUT;
         }
     }
@@ -110,7 +114,9 @@ public class TPLinkHS110Connector extends DeviceConnector
         }
         catch (IOException ioEx)
         {
-            //System.out.println("Inside TPLinkHS110Connector::getCurrentStatus() " + ioEx );
+            System.out.println("---------------------------------------------------------\n");
+            System.out.println("Inside TPLinkHS110Connector::getCurrentStatus() " + ioEx );
+            System.out.println("---------------------------------------------------------\n");
             return DeviceStatus.TIMEOUT;
         }
     }

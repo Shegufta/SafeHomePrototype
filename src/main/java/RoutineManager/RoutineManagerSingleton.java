@@ -4,6 +4,7 @@ import EventBusManager.EventBusSingleton;
 import EventBusManager.Events.EventRtnMgrConCtrlMsg;
 import EventBusManager.Events.EventSfHmRtnMgrMsg;
 import Utility.Routine;
+import Utility.SystemParametersSingleton;
 import com.google.common.eventbus.Subscribe;
 
 import java.util.HashMap;
@@ -25,7 +26,7 @@ public class RoutineManagerSingleton
     public RoutineManagerSingleton()
     {
         this.isDisposed = false;
-        this.uniqueRoutineID = 0;
+        this.uniqueRoutineID = SystemParametersSingleton.UNIQUE_ROUTINE_ID_STARTS_FROM;
         this.routineIDroutineMgrMap = new HashMap<>();
         EventBusSingleton.getInstance().getEventBus().register(this); // register to event bus
     }
@@ -48,7 +49,7 @@ public class RoutineManagerSingleton
     {
         synchronized (this.uniqueRoutineID)
         {
-            return ++this.uniqueRoutineID;
+            return this.uniqueRoutineID++;
         }
     }
 
