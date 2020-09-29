@@ -71,5 +71,65 @@
       {"devName":"exhaust_fan","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10000", "endStatus":"OFF"},
       {"devName":"smart_plug","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10000", "endStatus":"OFF"}
     ]
+  },
+  {"routineName": "daily-wakeup",
+    "commandList": [
+      {"devName":"bedroom_light","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"6000", "endStatus":"OFF"}
+    ]
+  },
+  {"routineName": "good-morning",
+    "commandList": [
+      {"devName":"curtain","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"100", "endStatus":"ON"},
+      {"devName":"bedroom_light","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"dummy","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"6000", "endStatus":"ON"},
+      {"devName":"coffee_maker","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"1200", "endStatus":"OFF"},
+      {"devName":"kc_speaker","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"30", "endStatus":"OFF"},
+      {"devName":"kc_light","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"}
+    ]
+  },
+  {"routineName": "breakfast1",
+    "commandList": [
+      {"devName":"kc_light","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"toaster","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"1200", "endStatus":"OFF"},
+      {"devName":"microwaver","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"1200", "endStatus":"OFF"},
+      {"devName":"kc_speaker","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"100", "endStatus":"OFF"}
+    ]
+  },
+  {"routineName": "breakfast2",
+    "commandList": [
+      {"devName":"coffee_maker","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"1200", "endStatus":"OFF"},
+      {"devName":"microwaver","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"1200", "endStatus":"OFF"},
+      {"devName":"toaster","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"1200", "endStatus":"OFF"},
+      {"devName":"kc_speaker","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"100", "endStatus":"OFF"},
+      {"devName":"kc_light","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"}
+    ]
+  },
+  {"routineName": "daylight-in",
+    "commandList": [
+      {"devName":"lv_shade","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"100", "endStatus":"ON"},
+      {"devName":"dining_light","commandPriority":"MUST","targetStatus":"OFF","durationMilliSec":"10", "endStatus":"OFF"},
+      {"devName":"kc_light","commandPriority":"MUST","targetStatus":"OFF","durationMilliSec":"10", "endStatus":"OFF"}
+    ]
+  },
+  {"routineName": "eating-time",
+    "commandList": [
+      {"devName":"dining_light","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"lv_speaker","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"600", "endStatus":"OFF"}
+    ]
+  },
+  {"routineName": "news-time",
+    "commandList": [
+      {"devName":"lv_speaker","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"12000", "endStatus":"OFF"}
+    ]
+  },
+  {"routineName": "water-plants",
+    "commandList": [
+      {"devName":"water_sprinkler","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"12000", "endStatus":"OFF"}
+    ]
+  },
+  {"routineName": "test-exectime",
+    "commandList": [
+      {"devName":"dining_light","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"1000", "endStatus":"OFF"}
+    ]
   }
 ]

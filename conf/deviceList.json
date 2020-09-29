@@ -1,4 +1,5 @@
 [
+  {"devName":"dummy","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
   {"devName":"speaker","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
   {"devName":"tv","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
   {"devName":"light","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
@@ -8,10 +9,17 @@
   {"devName":"rain_sensor","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
   {"devName":"window","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
   {"devName":"water_sprinkler","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
-  {"devName":"coffee_maker","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
   {"devName":"burner","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
-  {"devName":"smart_plug","devType":"TPLINK_HS110","ipAddr":"192.168.0.44","port":1234,"isPersistentTCP":true},
-  {"devName":"bedroom_light","devType":"TPLINK_HS110","ipAddr":"192.168.0.52","port":1234,"isPersistentTCP":true},
-  {"devName":"air_freshener","devType":"TPLINK_HS110","ipAddr":"192.168.0.50","port":1234,"isPersistentTCP":true},
-  {"devName":"dining_light","devType":"TPLINK_HS110","ipAddr":"192.168.0.51","port":1234,"isPersistentTCP":true}
+  {"devName":"air_freshener","devType":"TPLINK_HS110","ipAddr":"192.168.1.63","port":1234,"isPersistentTCP":true},
+  {"devName":"smart_plug","devType":"DUMMY_DEVICE","ipAddr":"192.168.1.61","port":1234,"isPersistentTCP":true},
+  {"devName":"bedroom_light","devType":"TPLINK_HS110","ipAddr":"192.168.1.61","port":1234,"isPersistentTCP":true},
+  {"devName":"curtain","devType":"TPLINK_HS110","ipAddr":"192.168.1.62","port":1234,"isPersistentTCP":true},
+  {"devName":"coffee_maker","devType":"TPLINK_HS110","ipAddr":"192.168.1.63","port":1234,"isPersistentTCP":true},
+  {"devName":"kc_speaker","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
+  {"devName":"kc_light","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
+  {"devName":"toaster","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
+  {"devName":"microwaver","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
+  {"devName":"lv_shade","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true},
+  {"devName":"dining_light","devType":"TPLINK_HS110","ipAddr":"192.168.1.61","port":1234,"isPersistentTCP":true},
+  {"devName":"lv_speaker","devType":"DUMMY_DEVICE","ipAddr":"a.b.c.d","port":1234,"isPersistentTCP":true}
 ]

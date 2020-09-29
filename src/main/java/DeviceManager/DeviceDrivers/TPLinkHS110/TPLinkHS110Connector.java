@@ -2,6 +2,8 @@ package DeviceManager.DeviceDrivers.TPLinkHS110;
 
 import DeviceManager.DeviceDrivers.DeviceFactory.DeviceConnector;
 import DeviceManager.DeviceDrivers.TPLinkHS110.Implementation.HS110Client;
+import Measurement.MeasurementSingleton;
+import Measurement.MeasurementType;
 import Utility.DeviceInfo;
 import Utility.DeviceStatus;
 import Utility.DeviceType;
@@ -50,13 +52,19 @@ public class TPLinkHS110Connector extends DeviceConnector
 
             synchronized (this.hs110Client)
             {
+                long start_time = System.currentTimeMillis();
                 this.hs110Client.on();
+                MeasurementSingleton.getInstance().AddResult(
+                    MeasurementType.SINGLE_CMD_EXEC_LATENCY,
+                    (float) (System.currentTimeMillis() - start_time));
                 return DeviceStatus.ON;
             }
         }
         catch (IOException ioEx)
         {
+            System.out.println("\n\n-----------------NO-CONNECTION-----------------------");
             System.out.println("Inside TPLinkHS110Connector::turnON() " + ioEx );
+            System.out.println("---------------------------------------------------------\n");
             return DeviceStatus.TIMEOUT;
         }
     }
@@ -74,13 +82,19 @@ public class TPLinkHS110Connector extends DeviceConnector
 
             synchronized (this.hs110Client)
             {
+                long start_time = System.currentTimeMillis();
                 this.hs110Client.off();
+                MeasurementSingleton.getInstance().AddResult(
+                    MeasurementType.SINGLE_CMD_EXEC_LATENCY,
+                    (float) (System.currentTimeMillis() - start_time));
                 return DeviceStatus.OFF;
             }
         }
         catch (IOException ioEx)
         {
+            System.out.println("\n\n-----------------NO-CONNECTION-----------------------");
             System.out.println("Inside TPLinkHS110Connector::turnOFF() " + ioEx );
+            System.out.println("---------------------------------------------------------\n");
             return DeviceStatus.TIMEOUT;
         }
     }

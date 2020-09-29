@@ -255,6 +255,17 @@ public class Routine implements Comparator<Routine>
     }
 
     @JsonIgnore
+    public float getWaittimevsE2E()
+    {
+        float endToEndLatency = getEndToEndLatency();
+        float waitTime = getStartDelay();
+
+        assert(0.0 < endToEndLatency);
+
+        return (waitTime * 100.0f / endToEndLatency);
+    }
+
+    @JsonIgnore
     public float getLatencyOverheadPrcnt()
     {
         float endToEndLatency = getEndToEndLatency();

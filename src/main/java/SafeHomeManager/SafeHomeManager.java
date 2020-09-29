@@ -5,6 +5,7 @@ import DeviceManager.DeviceConnectionManagerSingleton;
 import EventBusManager.EventBusSingleton;
 import EventBusManager.Events.EventRegisterRemoveStateChangeDevices;
 import EventBusManager.Events.EventSfHmRtnMgrMsg;
+import Measurement.MeasurementSingleton;
 import RoutineManager.RoutineManagerSingleton;
 import Utility.*;
 import com.google.common.eventbus.Subscribe;
@@ -22,6 +23,7 @@ public class SafeHomeManager
     RoutineManagerSingleton routineManagerSingleton;
     ConcurrencyControllerSingleton concurrencyControllerSingleton;
     DeviceConnectionManagerSingleton deviceConnectionManagerSingleton;
+    MeasurementSingleton measurementSingleton;
 
     Thread shutdownHook;
 
@@ -43,6 +45,7 @@ public class SafeHomeManager
                 SystemParametersSingleton.getInstance().consistencyType,
                 SAFE_HOME_START_TIME);
         this.deviceConnectionManagerSingleton = DeviceConnectionManagerSingleton.getInstance();
+        this.measurementSingleton = MeasurementSingleton.getInstance();
         System.out.println("\t\t DONE...");
         ////////////////////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////////////////////
@@ -125,6 +128,7 @@ public class SafeHomeManager
         routineManagerSingleton.Dispose();
         concurrencyControllerSingleton.Dispose();
         deviceConnectionManagerSingleton.Dispose();
+        measurementSingleton.Dispose();
 
         EventBusSingleton.getInstance().Dispose(); // SBA: WARNING: always Dispose it last. Otherwise it might break other not-Disposed-yet components
 

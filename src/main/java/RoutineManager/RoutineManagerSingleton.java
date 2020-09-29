@@ -3,10 +3,15 @@ package RoutineManager;
 import EventBusManager.EventBusSingleton;
 import EventBusManager.Events.EventRtnMgrConCtrlMsg;
 import EventBusManager.Events.EventSfHmRtnMgrMsg;
+import Measurement.MeasurementSingleton;
+import Measurement.MeasurementType;
 import Utility.Routine;
+import Utility.SystemParametersSingleton;
 import com.google.common.eventbus.Subscribe;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * @author Shegufta Ahsan
@@ -20,7 +25,6 @@ public class RoutineManagerSingleton
     private Integer uniqueRoutineID;
     private HashMap<Integer, RoutineHandler> routineIDroutineMgrMap;
     private static RoutineManagerSingleton singleton;
-
 
     public RoutineManagerSingleton()
     {
@@ -42,7 +46,6 @@ public class RoutineManagerSingleton
 
         return RoutineManagerSingleton.singleton;
     }
-
 
     private synchronized Integer getUniqueRoutineID()
     {
@@ -79,6 +82,10 @@ public class RoutineManagerSingleton
     {
         if (this.routineIDroutineMgrMap.containsKey(_routine.uniqueRoutineID)) {
             this.routineIDroutineMgrMap.get(_routine.uniqueRoutineID).executionResult(_routine);
+            MeasurementSingleton.getInstance().AddResult(MeasurementType.WAIT_TIME, _routine.getStartDelay());
+            MeasurementSingleton.getInstance().AddResult(
+                MeasurementType.WAIT_TIME_VS_E2E,
+                _routine.getWaittimevsE2E());
         } else {
             System.out.println("Executed an un-registered routine: " + _routine);
         }
