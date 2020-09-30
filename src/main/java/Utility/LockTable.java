@@ -37,6 +37,16 @@ public class LockTable
         }
     }
 
+    public void clear() {
+        this.lockTable.clear();
+        this.devID_lastAccesedRtn_Map = new HashMap<>();
+        List<String> devIDlist = SystemParametersSingleton.getInstance().devIDList;
+        for(String devID : devIDlist)
+        {
+            this.lockTable.put(devID, new ArrayList<>());
+        }
+    }
+
     public List<Routine> getAllRoutineSet()
     {
         if(this.consistencyType == CONSISTENCY_TYPE.WEAK)

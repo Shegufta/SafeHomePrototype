@@ -5,6 +5,7 @@ import ConcurrencyManager.ConcurrencyControllerFactory.ConcurrencyControllerFact
 import EventBusManager.EventBusSingleton;
 import Utility.CONSISTENCY_TYPE;
 import Utility.ConcurrencyControllerType;
+import Utility.LockTable;
 
 import java.util.List;
 
@@ -51,6 +52,17 @@ public class ConcurrencyControllerSingleton
 
         return ConcurrencyControllerSingleton.singleton;
     }
+
+    public static synchronized ConcurrencyControllerSingleton getInstance() {
+        if (ConcurrencyControllerSingleton.singleton.isDisposed) return null;
+        return ConcurrencyControllerSingleton.singleton;
+    }
+
+    public LockTable getLockTable() {
+        return concurrencyController.getLockTable();
+    }
+
+    public void clearLockTable() { concurrencyController.clearLockTable(); }
 
     public void Dispose()
     {

@@ -6,6 +6,8 @@ import EventBusManager.EventBusSingleton;
 import EventBusManager.Events.EventConCtrlDevMngrMsg;
 import EventBusManager.Events.EventDeviceStatusChange;
 import EventBusManager.Events.EventRegisterRemoveStateChangeDevices;
+import Measurement.MeasurementSingleton;
+import Measurement.MeasurementType;
 import Utility.*;
 import com.google.common.eventbus.Subscribe;
 
@@ -428,6 +430,7 @@ public class DeviceConnectionManagerSingleton
             return DeviceStatus.TIMEOUT; // this is equivalent to TIMEOUT
         }
 
+        Long start_time = System.currentTimeMillis();
         switch (_deviceCommandType)
         {
             case TURN_ON:
@@ -457,6 +460,9 @@ public class DeviceConnectionManagerSingleton
                 System.exit(1);
             }
         }
+//        MeasurementSingleton.getInstance().AddResult(
+//            MeasurementType.SINGLE_CMD_EXEC_LATENCY,
+//            (float) (System.currentTimeMillis() - start_time));
 
         if(DeviceStatus.TIMEOUT == devStatus)
         {// something is wrong... ! try to reset the connection

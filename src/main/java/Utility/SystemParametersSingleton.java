@@ -31,6 +31,8 @@ public class SystemParametersSingleton
     public Integer socketTimeoutMS = -1;
     public Integer heartBeatIntervalMS = -1;
 
+    public static final int UNIQUE_ROUTINE_ID_STARTS_FROM = 0;
+
     public Map<String, DeviceInfo> devNameDevInfoMap;
     private Map<String, Routine> routineNameRoutineDetailsMap;
     //HashMap<DevNameDevStatusTuple, List<DevNameDevStatusTuple>> conditionVsRequiredActionsMap;

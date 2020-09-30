@@ -79,6 +79,12 @@ public abstract class ConcurrencyController
     ////////////////////////////////_INCOMING_EVENTS_////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////////////
 
+    public LockTable getLockTable() {
+        return this.lockTable;
+    }
+
+    public void clearLockTable() { this.lockTable.clear(); }
+
     public abstract void Dispose();
 
     protected void unregisterEventBus()

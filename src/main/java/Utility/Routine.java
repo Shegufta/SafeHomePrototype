@@ -352,7 +352,7 @@ public class Routine implements Comparator<Routine>
     }
 
     @JsonIgnore
-    public boolean isDevAccessStartsDuringTimeSpan(String devId, int startTimeInclusive, int endTimeExclusive)
+    public boolean isDevAccessStartsDuringTimeSpan(String devId, long startTimeInclusive, long endTimeExclusive)
     {
         assert(startTimeInclusive < endTimeExclusive);
 

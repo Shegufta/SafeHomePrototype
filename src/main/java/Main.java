@@ -1,3 +1,4 @@
+import ConcurrencyManager.ConcurrencyControllerFactory.ConcurrencyController;
 import ConcurrencyManager.ConcurrencyControllerSingleton;
 import EventBusManager.Events.EventRegisterRemoveStateChangeDevices;
 import Measurement.MeasurementSingleton;
@@ -6,6 +7,7 @@ import RoutineManager.RoutineManagerSingleton;
 import SafeHomeManager.SafeHomeManager;
 import Utility.*;
 
+import java.io.File;
 import java.security.MessageDigest;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -72,7 +74,7 @@ public class Main
 
         int[] t_startings;
         if (shrunk_type == SHUNKMORN.FIX) {
-            t_startings = new int[]{0, 391, 866, 900, 1144, 1620, 858, 900};
+            t_startings = new int[]{0, 347, 573, 900, 1497, 1134, 948, 900};
         } else {
             t_startings = new int[]{300, t_good_morning, t_breakfast1, 1200, t_daylight, t_eating, t_news, 1200};
         }
@@ -112,10 +114,17 @@ public class Main
         SafeHomeManager safeHomeManager = new SafeHomeManager();
         Routine rtn;
 
-        String folder = "/Users/ruiyang/Developer/research/asid/expr/cdf/";
+        String parent_folder = "/Users/ruiyang/Developer/research/asid/expr/cdf/0929-prototype/";
+        String folder = parent_folder + "benchmarking-123.0/";
+        File directory = new File(folder);
+        if (! directory.exists()){
+            directory.mkdirs();
+            // If you require it to make the entire directory path including parents,
+            // use directory.mkdirs(); here instead.
+        }
 
         /* Shrunk morning scenario */
-        for (int i = 0; i < 2; ++i) {
+        for (int i = 0; i < 10; ++i) {
             System.out.printf("****** Run %d *******\n", i);
             List<AbstractMap.SimpleEntry<Integer, String>> t_rtns = getOneShrunkMorningWorkload();
             for (AbstractMap.SimpleEntry<Integer, String> t_rtn : t_rtns) {
@@ -126,9 +135,10 @@ public class Main
                 Thread.sleep(trailing_time);
             }
 
-            Thread.sleep(40000);
-//            LockTable lock_table = ConcurrencyControllerSingleton.getInstance().getLockTable();
-//            MeasurementSingleton.getInstance().RecordIncongruance(lock_table);
+            Thread.sleep(20000);
+            LockTable lock_table = ConcurrencyControllerSingleton.getInstance().getLockTable();
+            MeasurementSingleton.getInstance().RecordIncongruance(lock_table);
+            ConcurrencyControllerSingleton.getInstance().clearLockTable();
         }
 
         ////////////////////  Data Collection  //////////////////
@@ -136,7 +146,7 @@ public class Main
             MeasurementSingleton.getInstance().GetResult(MeasurementType.WAIT_TIME),
             MeasurementSingleton.getInstance().GetResult(MeasurementType.WAIT_TIME_VS_E2E));
 
-//        MeasurementSingleton.getInstance().getFinalIncongruenceResult("EV", folder);
+        MeasurementSingleton.getInstance().getFinalIncongruenceResult("EV", folder);
 
 //        List<Float> res = MeasurementSingleton.getInstance().GetResult(MeasurementType.SINGLE_CMD_EXEC_LATENCY);
 //        double res_avg = res.stream().mapToDouble(Float::doubleValue).average().orElse(0.0);
