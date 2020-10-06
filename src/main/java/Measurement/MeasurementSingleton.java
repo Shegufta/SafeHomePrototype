@@ -1,8 +1,6 @@
 package Measurement;
 
-import Utility.Command;
-import Utility.LockTable;
-import Utility.Routine;
+import Utility.*;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -110,7 +108,16 @@ public class MeasurementSingleton {
     }
   }
 
-  private DataHolder incong_data = new DataHolder();
+  private Map<CONSISTENCY_TYPE, String> header_map = new HashMap<CONSISTENCY_TYPE, String>() {{
+    put(CONSISTENCY_TYPE.STRONG, "GSV");
+    put(CONSISTENCY_TYPE.RELAXED_STRONG, "PSV");
+    put(CONSISTENCY_TYPE.EVENTUAL, "EV");
+    put(CONSISTENCY_TYPE.WEAK, "WV");
+  }};
+
+  private Map<CONSISTENCY_TYPE, DataHolder> incong_data = new HashMap<>();
+  private Map<CONSISTENCY_TYPE, DataHolder> e2e_latency = new HashMap<>();
+  private Map<CONSISTENCY_TYPE, DataHolder> parallel_dt = new HashMap<>();
 
   private static int maxDataPoint = 5000;
 
@@ -138,14 +145,45 @@ public class MeasurementSingleton {
     return null;
   }
 
-  public void RecordIncongruance(final LockTable _lockTable) {
-    Map<Float, Integer> res_data = isolationViolation(_lockTable);
-    incong_data.addData(res_data);
-  }
-
   public synchronized void Dispose() {
     // TODO: clean the class
     this.isDisposed = true;
+  }
+
+  public void RecordMetrics(final LockTable _lockTable) {
+    RecordE2ELatency(_lockTable);
+    RecordIncongruance(_lockTable);
+    RecordParallelDelta(_lockTable);
+  }
+
+  private void RecordE2ELatency(LockTable _lockTable) {
+    // Collect e2e latency of all routines for that run
+    List<Routine> allRtnList = _lockTable.getAllRoutineSet();
+    Map<Float, Integer> e2eTimeHistogram = new HashMap<>();
+    for(Routine routine : allRtnList) {
+      float data = routine.getEndToEndLatency() / 10;
+      int count = e2eTimeHistogram.getOrDefault(data, 0);
+      e2eTimeHistogram.put(data, count + 1);
+    }
+
+    // Record all latencies into result collector
+    CONSISTENCY_TYPE consistency_type = _lockTable.consistencyType;
+    if (!e2e_latency.containsKey(consistency_type)) {
+      e2e_latency.put(consistency_type, new DataHolder());
+    }
+    e2e_latency.get(consistency_type).addData(e2eTimeHistogram);
+  }
+
+  public void RecordIncongruance(final LockTable _lockTable) {
+    // Collect final incongruance of all routines for that run
+    Map<Float, Integer> res_data = isolationViolation(_lockTable);
+
+    // Record all incongruance into result collector
+    CONSISTENCY_TYPE consistency_type = _lockTable.consistencyType;
+    if (!incong_data.containsKey(consistency_type)) {
+      incong_data.put(consistency_type, new DataHolder());
+    }
+    incong_data.get(consistency_type).addData(res_data);
   }
 
   private Map<Float, Integer> isolationViolation(final LockTable _lockTable) {
@@ -153,6 +191,11 @@ public class MeasurementSingleton {
 
     // Get from SafeHomeFamework
     List<Routine> allRtnList = _lockTable.getAllRoutineSet();
+
+    System.out.println("\n\n ***** Doing isolation checking! **** \n");
+    for (Routine rtn: allRtnList) {
+      System.out.println(rtn.toString());
+    }
 
     Map<Routine, Set<Routine>> victimRtnAndAttackerRtnSetMap = new HashMap<>();
     Map<Routine, Set<Command>> victimRtnAndItsVictimCmdSetMap = new HashMap<>();
@@ -241,6 +284,119 @@ public class MeasurementSingleton {
     }
     return isvltn5_routineLvlIsolationViolationTimePrcntHistogram;
   }
+
+  public void RecordParallelDelta(final LockTable _lockTable) {
+    // Collect parallel delta of all routines for that run
+    Map<Float, Integer> res_data = parallelDelta(_lockTable);
+
+    // Record all incongruance into result collector
+    CONSISTENCY_TYPE consistency_type = _lockTable.consistencyType;
+    if (!parallel_dt.containsKey(consistency_type)) {
+      parallel_dt.put(consistency_type, new DataHolder());
+    }
+    parallel_dt.get(consistency_type).addData(res_data);
+  }
+
+  private Map<Float, Integer> parallelDelta(final LockTable _lockTable) {
+    System.out.printf("Start measuring Parallel delta for consistency type %s\n", _lockTable.consistencyType.name());
+    Map<Float, Integer> res_data = new HashMap<>();
+
+    long minStartTimeInclusive = Long.MAX_VALUE;
+    long maxEndTimeExclusive = Long.MIN_VALUE;
+
+    for(Routine rtn : _lockTable.getAllRoutineSet()) {
+      if(rtn.routineStartTime() < minStartTimeInclusive)
+        minStartTimeInclusive = rtn.routineStartTime();
+
+      if(maxEndTimeExclusive < rtn.routineEndTime())
+        maxEndTimeExclusive = rtn.routineEndTime();
+    }
+
+    assert(minStartTimeInclusive < maxEndTimeExclusive);
+
+    int totalTimeSpan = (int) (maxEndTimeExclusive - minStartTimeInclusive); // start time is inclusive, end time is exclusive. e.g.  J : [<R1|C1>:1:2) [<R0|C3>:3:4) [<R2|C0>:4:5)
+    //this.parallelRtnCntList = new ArrayList<>(Collections.nCopies(totalTimeSpan, 0.0f));
+    short[] histogram = new short[totalTimeSpan];
+
+    System.out.printf("Total time span: %d with start %d end %d \n", totalTimeSpan, minStartTimeInclusive, maxEndTimeExclusive);
+
+    for(Routine rtn : _lockTable.getAllRoutineSet()) {
+      int startIdx = (int) (rtn.routineStartTime() - minStartTimeInclusive);
+      int endIdx = (int) (rtn.routineEndTime() - minStartTimeInclusive);
+
+      System.out.printf("rtn %s ID %d start idx: %d, end idx: %d\n",
+          rtn.routineName, rtn.uniqueRoutineID, startIdx, endIdx);
+
+      for(int I = startIdx ; I < endIdx ; I++) {
+        histogram[I]++;
+        //this.parallelRtnCntList.add(I, (this.parallelRtnCntList.get(I) + 1));
+      }
+    }
+
+    short currentFreq = -1;
+
+    for(short frequency : histogram)
+    {
+      // New Approach: just record the change in frequency...
+      // e.g.  if the freq is 1 1 1 1 3 3 2 1 => then record 1,3,2,1...
+      // i.e. just the changing points
+      if(frequency != currentFreq) {
+        System.out.printf("A different parallel level %d\n", frequency);
+        currentFreq = frequency;
+
+        Integer count = res_data.getOrDefault((float)frequency, 0);
+        // here the count is the data. we have to count how many time these "count" appear
+        res_data.put((float)frequency, count + 1);
+      }
+    }
+    return res_data;
+  }
+
+  public void getFinalMetricResults(List<CONSISTENCY_TYPE> consistency_types, String folder) {
+    getFinalE2EResult(consistency_types, folder);
+    getFinalIncongruenceResult(consistency_types, folder);
+    getFinalParallelDelta(consistency_types, folder);
+  }
+
+  private void getFinalE2EResult(List<CONSISTENCY_TYPE> consistency_types, String folder) {
+    List<DataHolder> data_list = new ArrayList<>();
+    List<String> consistency_header = new ArrayList<>();
+    for (CONSISTENCY_TYPE consistency_type: consistency_types) {
+      DataFinalize(e2e_latency.get(consistency_type));
+      data_list.add(e2e_latency.get(consistency_type));
+      consistency_header.add(header_map.get(consistency_type));
+    }
+
+    writeCombinedStatInFile(MeasurementType.E2E_RTN_TIME,
+        folder, data_list, consistency_header);
+  }
+
+  public void getFinalIncongruenceResult(List<CONSISTENCY_TYPE> consistency_types, String folder) {
+    List<DataHolder> data_list = new ArrayList<>();
+    List<String> consistency_header = new ArrayList<>();
+    for (CONSISTENCY_TYPE consistency_type: consistency_types) {
+      DataFinalize(incong_data.get(consistency_type));
+      data_list.add(incong_data.get(consistency_type));
+      consistency_header.add(header_map.get(consistency_type));
+    }
+
+    writeCombinedStatInFile(MeasurementType.ISVLTN5_RTN_LIFESPAN_COLLISION_PERCENT,
+        folder, data_list, consistency_header);
+  }
+
+  private void getFinalParallelDelta(List<CONSISTENCY_TYPE> consistency_types, String folder) {
+    List<DataHolder> data_list = new ArrayList<>();
+    List<String> consistency_header = new ArrayList<>();
+    for (CONSISTENCY_TYPE consistency_type: consistency_types) {
+      DataFinalize(parallel_dt.get(consistency_type));
+      data_list.add(parallel_dt.get(consistency_type));
+      consistency_header.add(header_map.get(consistency_type));
+    }
+
+    writeCombinedStatInFile(MeasurementType.PARALLEL_DELTA,
+        folder, data_list, consistency_header);
+  }
+
 
   private void writeCombinedStatInFile(
       final MeasurementType currentMeasurement,
@@ -408,17 +564,5 @@ public class MeasurementSingleton {
     data_holder.globalHistogram = null;
 
     data_holder.isListFinalized = true;
-  }
-
-  public void getFinalIncongruenceResult(String consistency_type, String folder) {
-    DataFinalize(incong_data);
-    List<DataHolder> data_list = new ArrayList<>();
-    data_list.add(incong_data);
-
-    List<String> consistency_header = new ArrayList<>();
-    consistency_header.add(consistency_type);
-
-    writeCombinedStatInFile(MeasurementType.ISVLTN5_RTN_LIFESPAN_COLLISION_PERCENT,
-                            folder, data_list, consistency_header);
   }
 }

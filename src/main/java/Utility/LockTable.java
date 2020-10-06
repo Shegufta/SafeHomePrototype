@@ -12,17 +12,17 @@ public class LockTable
 {
     public Map<String, List<Routine>> lockTable;
     public Map<String, Routine> devID_lastAccesedRtn_Map = null;
-    public Map<String, List<Routine>> perDevRoutineListForWeakScheduling = null;
-    List<Routine> weakSchedulingSpecialLockTable = null;
+    public Map<String, List<Routine>> perDevRoutineListForWeakScheduling = new HashMap<>();
+    List<Routine> weakSchedulingSpecialLockTable = new ArrayList<>();
 
-    final private static int BUFFER_AFTER_LAST_COMMAND_OR_ROUTINE_ENDS_MILLISEC = 1;
+    final private static int BUFFER_AFTER_LAST_COMMAND_OR_ROUTINE_ENDS_MILLISEC = 0;
 
     public CONSISTENCY_TYPE consistencyType;
     public long safeHomeStartTime;
 
     public LockTable(List<String> devIDlist, CONSISTENCY_TYPE _consistencyType, long _safeHomeStartTime)
     {
-        assert(1 <= LockTable.BUFFER_AFTER_LAST_COMMAND_OR_ROUTINE_ENDS_MILLISEC); // This buffer should be GTE 1
+//        assert(1 <= LockTable.BUFFER_AFTER_LAST_COMMAND_OR_ROUTINE_ENDS_MILLISEC); // This buffer should be GTE 1
         this.lockTable = new HashMap<>();
 
         safeHomeStartTime = _safeHomeStartTime;
@@ -31,21 +31,28 @@ public class LockTable
         this.consistencyType = _consistencyType;
         this.devID_lastAccesedRtn_Map = new HashMap<>();
 
-        for(String devID : devIDlist)
-        {
+        for(String devID : devIDlist) {
             this.lockTable.put(devID, new ArrayList<>());
         }
     }
 
     public void clear() {
-        this.lockTable.clear();
-        this.devID_lastAccesedRtn_Map = new HashMap<>();
-        List<String> devIDlist = SystemParametersSingleton.getInstance().devIDList;
-        for(String devID : devIDlist)
-        {
-            this.lockTable.put(devID, new ArrayList<>());
+        if (consistencyType != CONSISTENCY_TYPE.WEAK) {
+            this.lockTable.clear();
+            List<String> devIDlist = SystemParametersSingleton.getInstance().devIDList;
+            for(String devID : devIDlist) {
+                this.lockTable.put(devID, new ArrayList<>());
+            }
+        } else {
+            weakSchedulingSpecialLockTable = new ArrayList<>();
+            perDevRoutineListForWeakScheduling = new HashMap<>();
         }
+        this.devID_lastAccesedRtn_Map = new HashMap<>();
     }
+
+    public void setConsistencyType(CONSISTENCY_TYPE type) {
+        this.consistencyType = type;
+}
 
     public List<Routine> getAllRoutineSet()
     {
@@ -363,9 +370,9 @@ public class LockTable
         //Collections.shuffle(rtnList); // shuffle the rtn list. in weak visibility, routine can be executed in any order.
 
         this.lockTable = null; // so that accidentally no one uses it while in WeakScheduling mode
-        this.perDevRoutineListForWeakScheduling = new HashMap<>();
-
-        weakSchedulingSpecialLockTable = new ArrayList<>();
+//        this.perDevRoutineListForWeakScheduling = new HashMap<>();
+//
+//        weakSchedulingSpecialLockTable = new ArrayList<>();
 
         for(int I = 0 ; I < rtnList.size() ; I++)
         {

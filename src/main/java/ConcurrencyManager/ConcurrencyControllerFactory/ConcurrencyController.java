@@ -85,6 +85,8 @@ public abstract class ConcurrencyController
 
     public void clearLockTable() { this.lockTable.clear(); }
 
+    public void setConsistencyType(CONSISTENCY_TYPE type) { this.lockTable.setConsistencyType(type);}
+
     public abstract void Dispose();
 
     protected void unregisterEventBus()

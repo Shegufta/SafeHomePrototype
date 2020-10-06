@@ -1,0 +1,219 @@
+[
+  {
+    "routineName": "bd1-getup",
+    "commandList": [
+      {"devName":"thermostat","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"bd1_speaker","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"3000", "endStatus":"OFF"},
+      {"devName":"bd1_light1","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"OFF"},
+      {"devName":"bd1_alarm","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"600", "endStatus":"OFF"},
+      {"devName":"fridge","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"OFF"}
+    ]
+  },
+  {
+    "routineName": "bd2-getup",
+    "commandList": [
+      {"devName":"thermostat","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"bd2_light1","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"bd2_alarm","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"300", "endStatus":"OFF"},
+      {"devName":"bd1_speaker","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"3000", "endStatus":"OFF"}
+    ]
+  },
+  {
+    "routineName": "bd3-getup",
+    "commandList": [
+      {"devName":"thermostat","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"bd3_light1","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"bd3_alarm","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"450", "endStatus":"OFF"},
+      {"devName":"bd3_curtain","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"3000", "endStatus":"ON"},
+      {"devName":"bd3_shade","commandPriority":"MUST","targetStatus":"OFF","durationMilliSec":"10", "endStatus":"OFF"}
+    ]
+  },
+  {
+    "routineName": "bd1-cloth-change",
+    "commandList": [
+      {"devName":"bd1_light2","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"bd1_curtain","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"}
+    ]
+  },
+  {
+    "routineName": "bd2-cloth-change",
+    "commandList": [
+      {"devName":"bd2_light1","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"bd2_light2","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"bd2_curtain","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"}
+    ]
+  },
+  {
+    "routineName": "bd3-cloth-change",
+    "commandList": [
+      {"devName":"bd3_light2","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"bd3_shade","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"}
+    ]
+  },
+  {
+    "routineName": "bd2_morn-stretch",
+    "commandList": [
+      {"devName":"bd2_light2","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"bd2_light3","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"bd2_shade","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"bd2_curtain","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"bd2_speaker","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"5000", "endStatus":"ON"}
+    ]
+  },
+  {
+    "routineName": "u1-washing",
+    "commandList": [
+      {"devName":"bath_light1","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"bath_speaker","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"3000", "endStatus":"ON"}
+    ]
+  },
+  {
+    "routineName": "u2-washing",
+    "commandList": [
+      {"devName":"bath_light1","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"bath_door","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"1200", "endStatus":"ON"}
+    ]
+  },
+  {
+    "routineName": "u3-washing",
+    "commandList": [
+      {"devName":"bath2_door","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"900", "endStatus":"ON"}
+    ]
+  },
+  {
+    "routineName": "u4-washing",
+    "commandList": [
+      {"devName":"bath2_door","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"3000", "endStatus":"ON"},
+      {"devName":"bath2_light1","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"}
+    ]
+  },
+  {
+    "routineName": "u2-shower",
+    "commandList": [
+      {"devName":"thermostat","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"bath_speaker","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"bath_door","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"9000", "endStatus":"ON"}
+    ]
+  },
+  {
+    "routineName": "u3-shower",
+    "commandList": [
+      {"devName":"thermostat","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"bath2_light1","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"bath2_speaker","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"bath2_door","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"6000", "endStatus":"ON"}
+    ]
+  },
+  {
+    "routineName": "pet-dirt",
+    "commandList": [
+      {"devName":"clean_robot","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"1800", "endStatus":"OFF"}
+    ]
+  },
+  {
+    "routineName": "pet-food",
+    "commandList": [
+      {"devName":"pet_fd_dispenser","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"100", "endStatus":"OFF"}
+    ]
+  },
+  {
+    "routineName": "time-to-school",
+    "commandList": [
+      {"devName":"lv_alarm","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"600", "endStatus":"OFF"}
+    ]
+  },
+  {
+    "routineName": "time-to-work",
+    "commandList": [
+      {"devName":"lv_alarm","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"600", "endStatus":"OFF"}
+    ]
+  },
+  {
+    "routineName": "time-to-work2",
+    "commandList": [
+      {"devName":"lv_alarm","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"600", "endStatus":"OFF"}
+    ]
+  },
+  {
+    "routineName": "time-to-class",
+    "commandList": [
+      {"devName":"lv_alarm","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"600", "endStatus":"OFF"}
+    ]
+  },
+  {
+    "routineName": "random-dirt",
+    "commandList": [
+      {"devName":"clean_robot","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"1800", "endStatus":"OFF"}
+    ]
+  },
+  {
+    "routineName": "start-cooking",
+    "commandList": [
+      {"devName":"kc_light1","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"kc_light2","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"kc_fan","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"12000", "endStatus":"ON"}
+    ]
+  },
+  {
+    "routineName": "breakfast-1",
+    "commandList": [
+      {"devName":"coffee_m","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"600", "endStatus":"ON"},
+      {"devName":"microwave","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"1050", "endStatus":"ON"},
+      {"devName":"toaster","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"400", "endStatus":"ON"}
+    ]
+  },
+  {
+    "routineName": "breakfast-2",
+    "commandList": [
+      {"devName":"toaster","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"1200", "endStatus":"ON"},
+      {"devName":"coffee_m","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"750", "endStatus":"ON"},
+      {"devName":"microwave","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"1050", "endStatus":"ON"}
+    ]
+  },
+  {
+    "routineName": "breakfast-3",
+    "commandList": [
+      {"devName":"coffee_m","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"900", "endStatus":"ON"},
+      {"devName":"toaster","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"750", "endStatus":"ON"},
+      {"devName":"microwave","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"1050", "endStatus":"ON"}
+    ]
+  },
+  {
+    "routineName": "breakfast-4",
+    "commandList": [
+      {"devName":"coffee_m","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"900", "endStatus":"OFF"},
+      {"devName":"toaster","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"1200", "endStatus":"OFF"}
+    ]
+  },
+  {
+    "routineName": "news-time",
+    "commandList": [
+      {"devName":"lv_speaker","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"12000", "endStatus":"OFF"}
+    ]
+  },
+  {"routineName": "daylight-in",
+    "commandList": [
+      {"devName":"lv_shade","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"100", "endStatus":"ON"},
+      {"devName":"lv_light1","commandPriority":"MUST","targetStatus":"OFF","durationMilliSec":"10", "endStatus":"OFF"}
+    ]
+  },
+  {"routineName": "lv-light-in",
+    "commandList": [
+      {"devName":"lv_light1","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"OFF"},
+      {"devName":"lv_light2","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"OFF"}
+    ]
+  },
+  {
+    "routineName": "leave-home",
+    "commandList": [
+      {"devName":"door","commandPriority":"MUST","targetStatus":"OFF","durationMilliSec":"10", "endStatus":"OFF"},
+      {"devName":"kc_light1","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"kc_light2","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"lv_light1","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"lv_light2","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"lv_speaker","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"bath_speaker","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"},
+      {"devName":"bath2_speaker","commandPriority":"MUST","targetStatus":"ON","durationMilliSec":"10", "endStatus":"ON"}
+    ]
+  }
+]

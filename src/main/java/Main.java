@@ -11,6 +11,7 @@ import java.io.File;
 import java.security.MessageDigest;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 
@@ -29,17 +30,50 @@ public class Main
         FIX
     }
 
-    private static SHUNKMORN shrunk_type = SHUNKMORN.COMPACT;
+    private static SHUNKMORN shrunk_type = SHUNKMORN.FIX;
 
     public static Routine getRoutine(String routineName)
     {
         return SystemParametersSingleton.getInstance().getRoutine(routineName);
     }
 
+    private static List<AbstractMap.SimpleEntry<Integer, String>> getOneMorningWorkload() {
+        int fst_lst_rtn_interval = 15000;
+
+        // Add all routines into workload
+        List<String> workload = SystemParametersSingleton.getInstance().getRoutineNameList();
+
+        // Shuffle list
+        Collections.shuffle(workload.subList(0, workload.size() - 1));
+        assert(!workload.isEmpty());
+
+        // Get a list of random registration time, sort, and assign
+        List<Integer> reg_times = IntStream.range(0, workload.size() - 2)
+            .mapToObj(i -> ThreadLocalRandom.current().nextInt(0, fst_lst_rtn_interval + 1))
+            .sorted()
+            .collect(Collectors.toList());
+
+        reg_times.add(0, 0);
+        reg_times.add(fst_lst_rtn_interval);
+
+        assert(workload.size() == reg_times.size());
+
+        List<AbstractMap.SimpleEntry<Integer, String>> res_workload = new ArrayList<>();
+        for (int i = 0; i < workload.size() - 1; ++i) {
+            res_workload.add(new AbstractMap.SimpleEntry<>(reg_times.get(i + 1) - reg_times.get(i), workload.get(i)));
+            System.out.printf("\t Routine %s starts at %d, following sleep %d%n",
+                workload.get(i), reg_times.get(i), reg_times.get(i + 1) - reg_times.get(i));
+        }
+        res_workload.add(new AbstractMap.SimpleEntry<>(0, workload.get(workload.size() - 1)));
+        System.out.printf("\t Routine %s starts at %d%n", workload.get(workload.size() - 1), 0);
+
+      return res_workload;
+    }
+
     private static List<AbstractMap.SimpleEntry<Integer, String>> getOneShrunkMorningWorkload() {
         /** Get the workload of one run
 
-         Return: a routine list with registration time set up.
+         Return: a routine list with trailing time set up.
          **/
         // Fetch through name instead of getRoutineList to avoid directly modifying original routine
         String[] rtn_names ={
@@ -114,7 +148,7 @@ public class Main
         SafeHomeManager safeHomeManager = new SafeHomeManager();
         Routine rtn;
 
-        String parent_folder = "/Users/ruiyang/Developer/research/asid/expr/cdf/0929-prototype/";
+        String parent_folder = "/Users/ruiyang/Developer/research/asid/expr/cdf/1006-prototype/";
         String folder = parent_folder + "benchmarking-123.0/";
         File directory = new File(folder);
         if (! directory.exists()){
@@ -123,30 +157,52 @@ public class Main
             // use directory.mkdirs(); here instead.
         }
 
-        /* Shrunk morning scenario */
-        for (int i = 0; i < 10; ++i) {
-            System.out.printf("****** Run %d *******\n", i);
-            List<AbstractMap.SimpleEntry<Integer, String>> t_rtns = getOneShrunkMorningWorkload();
-            for (AbstractMap.SimpleEntry<Integer, String> t_rtn : t_rtns) {
-                int trailing_time = t_rtn.getKey();
-                rtn = getRoutine(t_rtn.getValue());
-                System.out.println("\nExecuting routine " + rtn.routineName + "....");
-                safeHomeManager.sendMsgToRoutineManager(rtn);
-                Thread.sleep(trailing_time);
+        List<CONSISTENCY_TYPE> test_consistency_types = new ArrayList<CONSISTENCY_TYPE>() {{
+            add(CONSISTENCY_TYPE.STRONG);
+            add(CONSISTENCY_TYPE.RELAXED_STRONG);
+            add(CONSISTENCY_TYPE.EVENTUAL);
+            add(CONSISTENCY_TYPE.WEAK);
+        }};
+
+        Map<CONSISTENCY_TYPE, Integer> waiting_time_map = new HashMap<CONSISTENCY_TYPE, Integer>() {{
+            put(CONSISTENCY_TYPE.STRONG, 100000);
+            put(CONSISTENCY_TYPE.RELAXED_STRONG, 60000);
+            put(CONSISTENCY_TYPE.EVENTUAL, 30000);
+            put(CONSISTENCY_TYPE.WEAK, 30000);
+        }};
+
+        for (CONSISTENCY_TYPE consistency_type: test_consistency_types) {
+            /* Shrunk morning scenario */
+            for (int i = 0; i < 10; ++i) {
+                ConcurrencyControllerSingleton.getInstance().setConsistencyType(consistency_type);
+                System.out.printf("\n\n****** Run %d for %s*******\n", i, consistency_type.name());
+                System.out.printf("%d threads are running\n", Thread.getAllStackTraces().keySet().size());
+                List<AbstractMap.SimpleEntry<Integer, String>> t_rtns = getOneShrunkMorningWorkload();
+//                List<AbstractMap.SimpleEntry<Integer, String>> t_rtns = getOneMorningWorkload();
+                for (AbstractMap.SimpleEntry<Integer, String> t_rtn : t_rtns) {
+                    int trailing_time = t_rtn.getKey();
+                    rtn = getRoutine(t_rtn.getValue());
+                    System.out.println("\nExecuting routine " + rtn.routineName + "....");
+                    safeHomeManager.sendMsgToRoutineManager(rtn);
+//                    LockTable lock_table = ConcurrencyControllerSingleton.getInstance().getLockTable();
+//                    if (lock_table != null) System.out.println(lock_table.toString());
+                    Thread.sleep(trailing_time);
+                }
+
+                Thread.sleep(waiting_time_map.getOrDefault(consistency_type, 20000));
+                // Current execution do not provide correct WV lockTable because it only register one
+                LockTable lock_table = ConcurrencyControllerSingleton.getInstance().getLockTable();
+                MeasurementSingleton.getInstance().RecordMetrics(lock_table);
+                ConcurrencyControllerSingleton.getInstance().clearLockTable();
             }
 
-            Thread.sleep(20000);
-            LockTable lock_table = ConcurrencyControllerSingleton.getInstance().getLockTable();
-            MeasurementSingleton.getInstance().RecordIncongruance(lock_table);
-            ConcurrencyControllerSingleton.getInstance().clearLockTable();
+            ////////////////////  Data Collection  //////////////////
+            System.out.printf("Average waiting time: %s \n\twith prct %s %%\n",
+                MeasurementSingleton.getInstance().GetResult(MeasurementType.WAIT_TIME),
+                MeasurementSingleton.getInstance().GetResult(MeasurementType.WAIT_TIME_VS_E2E));
         }
 
-        ////////////////////  Data Collection  //////////////////
-        System.out.printf("Average waiting time: %s \n\twith prct %s %%\n",
-            MeasurementSingleton.getInstance().GetResult(MeasurementType.WAIT_TIME),
-            MeasurementSingleton.getInstance().GetResult(MeasurementType.WAIT_TIME_VS_E2E));
-
-        MeasurementSingleton.getInstance().getFinalIncongruenceResult("EV", folder);
+        MeasurementSingleton.getInstance().getFinalMetricResults(test_consistency_types, folder);
 
 //        List<Float> res = MeasurementSingleton.getInstance().GetResult(MeasurementType.SINGLE_CMD_EXEC_LATENCY);
 //        double res_avg = res.stream().mapToDouble(Float::doubleValue).average().orElse(0.0);

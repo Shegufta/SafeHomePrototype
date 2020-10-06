@@ -64,6 +64,8 @@ public class ConcurrencyControllerSingleton
 
     public void clearLockTable() { concurrencyController.clearLockTable(); }
 
+    public void setConsistencyType(CONSISTENCY_TYPE type) { concurrencyController.setConsistencyType(type); }
+
     public void Dispose()
     {
         this.isDisposed = true;
