@@ -148,7 +148,7 @@ public class Main
         SafeHomeManager safeHomeManager = new SafeHomeManager();
         Routine rtn;
 
-        String parent_folder = "/Users/ruiyang/Developer/research/asid/expr/cdf/1006-prototype/";
+        String parent_folder = "/Users/ruiyang/Developer/research/asid/expr/cdf/1006-prototype-10run/";
         String folder = parent_folder + "benchmarking-123.0/";
         File directory = new File(folder);
         if (! directory.exists()){
@@ -166,7 +166,7 @@ public class Main
 
         Map<CONSISTENCY_TYPE, Integer> waiting_time_map = new HashMap<CONSISTENCY_TYPE, Integer>() {{
             put(CONSISTENCY_TYPE.STRONG, 100000);
-            put(CONSISTENCY_TYPE.RELAXED_STRONG, 60000);
+            put(CONSISTENCY_TYPE.RELAXED_STRONG, 70000);
             put(CONSISTENCY_TYPE.EVENTUAL, 30000);
             put(CONSISTENCY_TYPE.WEAK, 30000);
         }};
@@ -177,15 +177,12 @@ public class Main
                 ConcurrencyControllerSingleton.getInstance().setConsistencyType(consistency_type);
                 System.out.printf("\n\n****** Run %d for %s*******\n", i, consistency_type.name());
                 System.out.printf("%d threads are running\n", Thread.getAllStackTraces().keySet().size());
-                List<AbstractMap.SimpleEntry<Integer, String>> t_rtns = getOneShrunkMorningWorkload();
-//                List<AbstractMap.SimpleEntry<Integer, String>> t_rtns = getOneMorningWorkload();
+                List<AbstractMap.SimpleEntry<Integer, String>> t_rtns = getOneMorningWorkload();
                 for (AbstractMap.SimpleEntry<Integer, String> t_rtn : t_rtns) {
                     int trailing_time = t_rtn.getKey();
                     rtn = getRoutine(t_rtn.getValue());
                     System.out.println("\nExecuting routine " + rtn.routineName + "....");
                     safeHomeManager.sendMsgToRoutineManager(rtn);
-//                    LockTable lock_table = ConcurrencyControllerSingleton.getInstance().getLockTable();
-//                    if (lock_table != null) System.out.println(lock_table.toString());
                     Thread.sleep(trailing_time);
                 }
 
@@ -204,108 +201,6 @@ public class Main
 
         MeasurementSingleton.getInstance().getFinalMetricResults(test_consistency_types, folder);
 
-//        List<Float> res = MeasurementSingleton.getInstance().GetResult(MeasurementType.SINGLE_CMD_EXEC_LATENCY);
-//        double res_avg = res.stream().mapToDouble(Float::doubleValue).average().orElse(0.0);
-//        System.out.printf("%d samples. CMD execution time %s\n\t\t Avg %f\n",
-//            res.size(),  res, res_avg);
-//        System.out.println("Exiting SafeHome program....");
-//        safeHomeManager.Dispose();
-
-//        Routine daily_getup = getRoutine("daily-wakeup");
-//        System.out.println("Daily wakeup routine....");
-//        safeHomeManager.sendMsgToRoutineManager(daily_getup);
-//
-//        Thread.sleep(2000);
-//
-//        Routine good_morning = getRoutine("good-morning");
-//        System.out.println("Good morning routine....");
-//        safeHomeManager.sendMsgToRoutineManager(good_morning);
-
-        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//        Routine turn_on_bedroomLight = getRoutine("turn_on_bedroomLight");
-//        System.out.println("Turn on Bedroom Light....");
-//        safeHomeManager.sendMsgToRoutineManager(turn_on_bedroomLight);
-//
-//        //System.out.println("sleep for 6 second");
-//        //Thread.sleep(6000);
-//        //System.out.println("wakeup");
-//
-//        Thread.sleep(1000);
-//
-//
-//        Routine turn_on_air_freshener = getRoutine("turn_on_air_freshener");
-//        System.out.println("Turn on air freshener....");
-//        safeHomeManager.sendMsgToRoutineManager(turn_on_air_freshener);
-//
-//        //System.out.println("sleep for 6 second");
-//        //Thread.sleep(6000);
-//        //System.out.println("wakeup");
-//
-//        Thread.sleep(1000);
-//
-//        Routine bedroomRoutine2 = getRoutine("bedroomRoutine2");
-//        System.out.println("Turn on air freshener and bedroom light");
-//        safeHomeManager.sendMsgToRoutineManager(bedroomRoutine2);
-//
-//
-//        System.out.println("sleep for 10 second");
-//        Thread.sleep(10000);
-//        System.out.println("wakeup");
-//        ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//
-//        Routine turn_on_oven = getRoutine("turn_on_oven");
-//        Routine theater_mode = getRoutine("theater_mode");
-//        Routine open_window = getRoutine("open_window");
-//
-//        System.out.println("--------------------------------------------------------------------------------------");
-//        //turn_on_oven = getRoutine("turn_on_oven");
-//        safeHomeManager.sendMsgToRoutineManager(turn_on_oven);
-//
-////        System.out.println("Turn on Fire Alarm & Exhaust Fan!");
-////        safeHomeManager.turnOnOffUnplugDevice("exhaust_fan", EventRegisterRemoveStateChangeDevices.DeviceEventType.TURN_ON);
-////        safeHomeManager.turnOnOffUnplugDevice("fire_alarm", EventRegisterRemoveStateChangeDevices.DeviceEventType.TURN_ON);
-////        Thread.sleep(6000);
-//
-//        System.out.println("Turn On oven....");
-//        safeHomeManager.sendMsgToRoutineManager(turn_on_oven);
-//        System.out.println("Again sleeping");
-//        Thread.sleep(6000);
-//        System.out.println("wakeup");
-//
-//        System.out.println("Turn ON tv!");
-//        safeHomeManager.turnOnOffUnplugDevice("tv", EventRegisterRemoveStateChangeDevices.DeviceEventType.TURN_ON);
-//
-//        System.out.println("Again sleeping looooooooooooooooooong");
-//        Thread.sleep(6000);
-//        System.out.println("wakeup");
-//
-//        System.out.println("Turn OFF tv!");
-//        safeHomeManager.turnOnOffUnplugDevice("tv", EventRegisterRemoveStateChangeDevices.DeviceEventType.TURN_OFF);
-//
-//        System.out.println("Again sleeping");
-//        Thread.sleep(6000);
-//        System.out.println("wakeup");
-//
-//        System.out.println("Unplug Fire Alarm !");
-//        safeHomeManager.turnOnOffUnplugDevice("fire_alarm", EventRegisterRemoveStateChangeDevices.DeviceEventType.UNPLUG);
-//        Thread.sleep(6000);
-//
-//
-//        turn_on_oven = getRoutine("turn_on_oven");
-//        safeHomeManager.sendMsgToRoutineManager(turn_on_oven);
-//
-//
-//        ////////////////////////////////////////////////////////////////////////////////////////
-//
-//
-//        System.out.println("Again sleeping");
-//        Thread.sleep(30000); // To run it for longer time, put a higher value
-//
-//        ////////////////////  Data Collection  //////////////////
-//        System.out.printf("Average waiting time: %s with prct %s %%\n",
-//            MeasurementSingleton.getInstance().GetResult(MeasurementType.WAIT_TIME),
-//            MeasurementSingleton.getInstance().GetResult(MeasurementType.WAIT_TIME_VS_E2E));
-//
         System.out.println("Exiting SafeHome program....");
         safeHomeManager.Dispose();
     }

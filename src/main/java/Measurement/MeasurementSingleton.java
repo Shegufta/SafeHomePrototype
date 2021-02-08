@@ -12,7 +12,7 @@ public class MeasurementSingleton {
   private static MeasurementSingleton singleton;
   private Map<MeasurementType, SingleMeasurementResult> all_results = new HashMap<>();
 
-  private static class DataHolder
+  private class DataHolder
   {
     //public float average = Float.MIN_VALUE;
     public List<Float> dataList;
@@ -22,6 +22,9 @@ public class MeasurementSingleton {
     public Map<Float,Integer> globalHistogram;
     List<Float> cdfDataListInHistogramMode = new ArrayList<>();
     List<Float> cdfFrequencyListInHisotgramMode = new ArrayList<>();
+    List<Float> pdfDataListInHistogramMode = new ArrayList<>();
+    List<Float> pdfFrequencyListInHisotgramMode = new ArrayList<>();
+
 
     public Boolean isListFinalized;
     double globalItemCount;
@@ -49,6 +52,18 @@ public class MeasurementSingleton {
         return dataList.get(N);
     }
 
+    public float getPDFNthDataOrMinusOne(int N, float dummyMaxItemCount)
+    {
+      if( (N < 0) || (this.pdfListSize() == 0) || (this.pdfListSize() <= N))
+        return -1;
+
+      if (isHistogramMode)
+        return pdfDataListInHistogramMode.get(N);
+      else
+        return dataList.get(N);
+    }
+
+
     public float getNthCDFOrMinusOne(int N)
     {
       if( (N < 0) || (this.cdfListSize() == 0) || (this.cdfListSize() <= N))
@@ -59,6 +74,18 @@ public class MeasurementSingleton {
       else
       {
         float frequency = 1.0f / this.cdfListSize();
+        return frequency * (N + 1.0f);
+      }
+    }
+
+    public float getNthPDFOrMinusOne(int N) {
+      if ((N < 0) || (this.pdfListSize() == 0) || (this.pdfListSize() <= N))
+        return -1;
+
+      if (isHistogramMode) {
+        return pdfFrequencyListInHisotgramMode.get(N);
+      } else {
+        float frequency = 1.0f / this.pdfListSize();
         return frequency * (N + 1.0f);
       }
     }
@@ -78,6 +105,17 @@ public class MeasurementSingleton {
       }
       else
       {
+        return (int)this.globalItemCount;
+      }
+    }
+
+    public int pdfListSize()
+    {
+      assert(this.isListFinalized); // should not call until finalize.
+      if(this.isHistogramMode) {
+        assert(!pdfDataListInHistogramMode.isEmpty());
+        return pdfDataListInHistogramMode.size();
+      } else {
         return (int)this.globalItemCount;
       }
     }
@@ -335,8 +373,7 @@ public class MeasurementSingleton {
 
     short currentFreq = -1;
 
-    for(short frequency : histogram)
-    {
+    for(short frequency : histogram) {
       // New Approach: just record the change in frequency...
       // e.g.  if the freq is 1 1 1 1 3 3 2 1 => then record 1,3,2,1...
       // i.e. just the changing points
@@ -349,6 +386,7 @@ public class MeasurementSingleton {
         res_data.put((float)frequency, count + 1);
       }
     }
+    res_data.merge((float) 0, 1, Integer::sum);
     return res_data;
   }
 
@@ -369,6 +407,8 @@ public class MeasurementSingleton {
 
     writeCombinedStatInFile(MeasurementType.E2E_RTN_TIME,
         folder, data_list, consistency_header);
+    writeCombinedPDFInFile(MeasurementType.E2E_RTN_TIME,
+        folder, data_list, consistency_header);
   }
 
   public void getFinalIncongruenceResult(List<CONSISTENCY_TYPE> consistency_types, String folder) {
@@ -382,6 +422,8 @@ public class MeasurementSingleton {
 
     writeCombinedStatInFile(MeasurementType.ISVLTN5_RTN_LIFESPAN_COLLISION_PERCENT,
         folder, data_list, consistency_header);
+    writeCombinedPDFInFile(MeasurementType.ISVLTN5_RTN_LIFESPAN_COLLISION_PERCENT,
+        folder, data_list, consistency_header);
   }
 
   private void getFinalParallelDelta(List<CONSISTENCY_TYPE> consistency_types, String folder) {
@@ -394,6 +436,8 @@ public class MeasurementSingleton {
     }
 
     writeCombinedStatInFile(MeasurementType.PARALLEL_DELTA,
+        folder, data_list, consistency_header);
+    writeCombinedPDFInFile(MeasurementType.PARALLEL_DELTA,
         folder, data_list, consistency_header);
   }
 
@@ -443,6 +487,57 @@ public class MeasurementSingleton {
     try {
       Writer fileWriter = new FileWriter(filePath);
       fileWriter.write(combinedCDFStr);
+      fileWriter.close();
+    } catch (Exception ex) {
+      System.out.println("\n\nERROR: cannot write file " + filePath);
+      System.exit(1);
+    }
+  }
+
+  private void writeCombinedPDFInFile(
+      final MeasurementType currentMeasurement,
+      final String subDirPath,
+      List<DataHolder> insertedInConsistencyOrder,
+      List<String> consistencyHeader
+  ) {
+    assert(insertedInConsistencyOrder.size() == consistencyHeader.size());
+    String fileName = currentMeasurement.name() + "_PDF.dat";
+    String filePath = subDirPath + File.separator + fileName;
+
+    float maxItemCount = Integer.MIN_VALUE;
+
+    String combinedPDFStr = "";
+    for(int I = 0 ; I < consistencyHeader.size() ; I++) {
+      if( maxItemCount < insertedInConsistencyOrder.get(I).pdfListSize())
+        maxItemCount = insertedInConsistencyOrder.get(I).pdfListSize();
+
+      combinedPDFStr += "data\t" + consistencyHeader.get(I);
+
+      if(I < (consistencyHeader.size() - 1))
+        combinedPDFStr += "\t";
+      else
+        combinedPDFStr += "\n";
+    }
+
+    System.out.println("\tPrepared the header: " + combinedPDFStr + "\t\tnext working to extract the data...: maxItemCount = " + maxItemCount);
+
+    for(int N = 0 ; N < maxItemCount ; N++) {
+      for(int I = 0 ; I < insertedInConsistencyOrder.size() ; I++) {
+        float data = insertedInConsistencyOrder.get(I).getPDFNthDataOrMinusOne(N, maxItemCount);
+        float PDF = insertedInConsistencyOrder.get(I).getNthPDFOrMinusOne(N);
+
+        combinedPDFStr += data + "\t" + PDF;
+
+        if(I < (insertedInConsistencyOrder.size() - 1))
+          combinedPDFStr += "\t";
+        else
+          combinedPDFStr += "\n";
+      }
+    }
+
+    try {
+      Writer fileWriter = new FileWriter(filePath);
+      fileWriter.write(combinedPDFStr);
       fileWriter.close();
     } catch (Exception ex) {
       System.out.println("\n\nERROR: cannot write file " + filePath);
@@ -549,6 +644,8 @@ public class MeasurementSingleton {
 
       data_holder.cdfDataListInHistogramMode.add(sortedData);
       data_holder.cdfFrequencyListInHisotgramMode.add(indexTracker * frequencyMultiplyer);
+      data_holder.pdfDataListInHistogramMode.add(sortedData);
+      data_holder.pdfFrequencyListInHisotgramMode.add(frequency);
 
       if(1 < frequency)
       {
