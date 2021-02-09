@@ -77,7 +77,21 @@ JSON FILE: /conf/safetyList.json
     Routines-> SafeHomeManager <=> RoutineManager <=> ConcurrencyManager <=> SafetyChecker <=> DeviceManager <=> Real/Dummy-Devices
     
     
-    
+# Quick Deployment Guide to run with TP-Link HS103
+Setting up steps:
+- For each TP-Link HS103, prepare them with their MAC address.
+- Access your router, find each HS103 switch by its MAC address and fix
+  their ip addresses.
+- Setup all TP-Link HS103 switches with Kasa app (e.g. through phone). 
+  The switches should be the same wifi network with your central device 
+  (e.g. Raspberry Pi, laptop, etc). 
+- Goes to `conf/deviceList.json` in this repo, for the device that you'd
+  like your switch to react to, change the device type to `TPLINK_HS110`
+  and change its corresponding ip address to what you've setup in the 
+  router.
+- Goes to `src/main/java/Main.java`, setup `parent_folder` (around line 151)
+  to the absolute path that you'd like to save the experimental result.
+- Starts run code of this repo.
     
     
     
